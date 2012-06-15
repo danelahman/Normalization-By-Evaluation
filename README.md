@@ -6,9 +6,9 @@ Formalization of normalization by evaluation for the fine-grain call-by-value la
 
    ValueEffectTheoryVersion
      
-      - The normalization by evaluation and extensions of value and effect theories to FGCBV_eff.
+      - The normalization by evaluation algorithm and the extension of value and effect theories to FGCBV_eff.
 
 
    EqualityVersion 
     
-      - The version of normalization by evaluation for FGCBV_eff where the value and effect theories do not contain any equations.
+      - The version of normalization by evaluation where the value and effect theories do not contain any equations.
