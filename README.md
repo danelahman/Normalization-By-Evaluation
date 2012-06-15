@@ -4,7 +4,7 @@ Normalization-By-Evaluation
 Formalization of normalization by evaluation for the fine-grain call-by-value language (FGCBV) extended with algebraic effect theories.
 
 
-   ValueEffectTheoryVersionversion 
+   ValueEffectTheoryVersion
      
       - The normalization by evaluation and extensions of value and effect theories to FGCBV_eff.
 
