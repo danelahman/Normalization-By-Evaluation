@@ -22,3 +22,6 @@ Formalization of normalization by evaluation for a fine-grained call-by-value la
    OlderCode
       
       - Older code from the MPhil dissertation time
+      
+      
+NOTICE: The code has been tested on Agda version 2.3.1. Newer versions of Agda might cause Monad.agda throw strange pattern-matching errors.
