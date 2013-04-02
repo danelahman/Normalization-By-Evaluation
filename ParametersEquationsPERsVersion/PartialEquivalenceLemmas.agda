@@ -140,9 +140,9 @@ module PartialEquivalenceLemmas where
     ≈-fundamental-lemma {e = e} {e' = e'} t p (≈-fundamental-lemma u p)
   ≈T-fundamental-lemma (or t u) p = 
     congor (≈T-fundamental-lemma t p) (≈T-fundamental-lemma u p)
-  ≈T-fundamental-lemma (input t) p = 
+  ≈T-fundamental-lemma (input[ t ]) p = 
     conginput (≈T-fundamental-lemma t (≈e-extend-lem (≈e-monotonicity {f = wk₁} p) ≡-refl))
-  ≈T-fundamental-lemma (output b t) p = 
+  ≈T-fundamental-lemma (output[ b , t ]) p = 
     congoutput (≈-fundamental-lemma b p) (≈T-fundamental-lemma t p)
   ≈T-fundamental-lemma (if b then t else u) p = 
     congif (≈-fundamental-lemma b p) (≈T-fundamental-lemma t p) (≈T-fundamental-lemma u p)
@@ -688,9 +688,9 @@ module PartialEquivalenceLemmas where
     congor (rename-env-lem-p t p) (rename-env-lem-p u p)
   rename-env-lem-p (if b then t else u) p = 
     congif (rename-env-lem-v b p) (rename-env-lem-p t p) (rename-env-lem-p u p)
-  rename-env-lem-p {_} {_} {_} {σ} {f} {e} {e'} (input t) p = 
+  rename-env-lem-p {_} {_} {_} {σ} {f} {e} {e'} (input[ t ]) p = 
     conginput (≈T-trans (≈T-fundamental-lemma t (env-extend-rename-wk₂-lem {σ = bit} {f = f} {e = env-rename wk₁ e} {e' = env-rename wk₁ e} ≡-refl (≈e-monotonicity (≈e-refl p)) )) (rename-env-lem-p t (≈e-extend-lem (≈e-monotonicity {f = wk₁} p) ≡-refl)))
-  rename-env-lem-p (output b t) p = 
+  rename-env-lem-p (output[ b , t ]) p = 
     congoutput (rename-env-lem-v b p) (rename-env-lem-p t p)
 
 
@@ -868,7 +868,7 @@ module PartialEquivalenceLemmas where
     env-extend-subst-lem-v t p (env-extend-subst-lem-v u p)
   env-extend-subst-lem-p (or t u) p = 
     congor (env-extend-subst-lem-p t p) (env-extend-subst-lem-p u p)
-  env-extend-subst-lem-p {Γ} {Γ'} {Γ''} {σ} {s} {e} {e'} (input t) p = 
+  env-extend-subst-lem-p {Γ} {Γ'} {Γ''} {σ} {s} {e} {e'} (input[ t ]) p = 
     conginput (≈T-trans 
       (≈T-fundamental-lemma 
         t 
@@ -877,7 +877,7 @@ module PartialEquivalenceLemmas where
           (≈e-extend-lem (λ x → ⟦⟧v-naturality' (s x) (≈e-refl p)) ≡-refl) 
           (sub-to-env-lift-lem {e = env-rename wk₁ e} {e' = env-rename wk₁ e} (bit2NV (varAV Hd)) (bit2NV (varAV Hd)) ≡-refl (≈e-monotonicity (≈e-refl p))))) 
       (env-extend-subst-lem-p {s = lift s} t (≈e-extend-lem (≈e-monotonicity p) ≡-refl)))
-  env-extend-subst-lem-p (output b t) p = 
+  env-extend-subst-lem-p (output[ b , t ]) p = 
     congoutput (env-extend-subst-lem-v b p) (env-extend-subst-lem-p t p)
   env-extend-subst-lem-p (if b then t else u) p = 
     congif (env-extend-subst-lem-v b p) (env-extend-subst-lem-p t p) (env-extend-subst-lem-p u p)

@@ -2,7 +2,7 @@
 ------------- Normalization by evaluation ------------
 ---------------- and algebraic effects ---------------
 ------------------------------------------------------
------------------- Residuating Monad -----------------
+----------------- Residualizing Monad ----------------
 ------------------------------------------------------
 
 
@@ -14,7 +14,7 @@ open import Presheaves
 
 module Monad where 
 
-  -- Object map of the residuating monad
+  -- Object map of the residualizing monad
   data T (X : Ctx → Set) : Ctx → Set where
     T-return : {Γ : Ctx} → X Γ → T X Γ
     T-to : {Γ : Ctx} {σ : Ty} → Γ ⊢ap σ → T X (Γ :: σ) → T X Γ
@@ -35,7 +35,7 @@ module Monad where
   Alg-output1 d = T-output1 d
 
 
-  -- Action of renaming on the residuating monad
+  -- Action of renaming on the residualizing monad
   T-rename : {X : Set^Ren} {Γ Γ' : Ctx} → (f : Ren Γ Γ') → T (set X) Γ → T (set X) Γ'
   T-rename {X} {Γ} {Γ'} f (T-return x) = T-return ((act X) f x)
   T-rename {X} {Γ} {Γ'} f (T-to {.Γ} {σ} x y) = T-to (⊢ap-rename f x) (T-rename {X} {Γ :: σ} {Γ' :: σ} (wk₂ f) y)
@@ -44,7 +44,7 @@ module Monad where
   T-rename {X} {Γ} {Γ'} f (T-output1 x) = T-output1 (T-rename {X} {Γ} {Γ'} f x)
 
 
-  -- The residuating monad on presheaves
+  -- The residualizing monad on presheaves
   T-Set^Ren : Set^Ren → Set^Ren
   T-Set^Ren X = 
     record {
@@ -53,7 +53,7 @@ module Monad where
     }
 
 
-  -- Unit of the residuating monad
+  -- Unit of the residualizing monad
   η : {X : Set^Ren} → Set^Ren-Map X (T-Set^Ren X)
   η X = T-return X
 
@@ -71,7 +71,7 @@ module Monad where
     ∎
 
 
-  -- Kleisli extension of the residuating monad
+  -- Kleisli extension of the residualizing monad
   * : {X Y : Set^Ren} → (Set^Ren-Map X (T-Set^Ren Y)) → Set^Ren-Map (T-Set^Ren X) (T-Set^Ren Y)
   * {X} {Y} f {Γ} (T-return x) = f {Γ} x
   * {X} {Y} f {Γ} (T-to {.Γ} {σ} t x) = T-to t (* {X} {Y} f {Γ :: σ} x) 
@@ -124,12 +124,12 @@ module Monad where
   Tf {X} {Y} f {Γ} x = * {X} {Y} (λ {Γ'} x → η {Y} (f {Γ'} x)) {Γ} x  
 
 
-  -- Multiplication of the residuating monad
+  -- Multiplication of the residualizing monad
   μ : {X : Set^Ren} → Set^Ren-Map (T-Set^Ren (T-Set^Ren X)) (T-Set^Ren X)
   μ {X} {Y} x = * {T-Set^Ren X} {X} id x
 
 
-  -- Strength of the residuating monad
+  -- Strength of the residualizing monad
   t-r : {X Y : Set^Ren} → Set^Ren-Map (X ⊗ (T-Set^Ren Y)) (T-Set^Ren (X ⊗ Y))
   t-r {Γ} (x , T-return y)  = T-return (x , y)
   t-r {X} {Y} {Γ}  (x , T-to {.Γ} {σ} t y) = T-to t (t-r {X} {Y} {Γ :: σ} ((act X wk₁ x) , y))

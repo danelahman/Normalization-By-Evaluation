@@ -6,6 +6,9 @@
 ------------------------------------------------------
 ------------------------------------------------------
 --- Includes NBE algorithm for the theory of state ---
+--- which uses an explicit least fixpoint taken on ---
+--- a signature of strictly positive residuating   ---
+--- functors Ren -> Set                            ---
 ------------------------------------------------------
 --------- Code tested with Agda version 2.3.1 --------
 ------------------------------------------------------

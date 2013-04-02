@@ -132,11 +132,11 @@ module PartialEquivalenceLemmas where
     ≈-*-strength-fundamental-lemma u (≈T-fundamental-lemma t p) p
   ≈T-fundamental-lemma {Γ} {Γ'} {τ} {e} {e'} (app {σ} t u) p = 
     ≈-fundamental-lemma {e = e} {e' = e'} t p (≈-fundamental-lemma u p)
-  ≈T-fundamental-lemma (input t u) p = 
+  ≈T-fundamental-lemma (input[ t , u ]) p = 
     conginput (≈T-fundamental-lemma t p) (≈T-fundamental-lemma u p)
-  ≈T-fundamental-lemma (output0 t) p = 
+  ≈T-fundamental-lemma (output0[ t ]) p = 
     congoutput0 (≈T-fundamental-lemma t p)
-  ≈T-fundamental-lemma (output1 t) p = 
+  ≈T-fundamental-lemma (output1[ t ]) p = 
     congoutput1 (≈T-fundamental-lemma t p)
 
   ≈-*-strength-fundamental-lemma t (≈T-sym p) q = 
@@ -560,11 +560,11 @@ module PartialEquivalenceLemmas where
     *-rename-env-lem u (⟦ t ⟧p (λ x → e (f x))) (⟦ ⊢p-rename f t ⟧p e') (rename-env-lem-p t p) p
   rename-env-lem-p (app t u) p = 
     (rename-env-lem-v t p) (rename-env-lem-v u p)
-  rename-env-lem-p (input t u) p = 
+  rename-env-lem-p (input[ t , u ]) p = 
     conginput (rename-env-lem-p t p) (rename-env-lem-p u p)
-  rename-env-lem-p (output0 t) p = 
+  rename-env-lem-p (output0[ t ]) p = 
     congoutput0 (rename-env-lem-p t p)
-  rename-env-lem-p (output1 t) p = 
+  rename-env-lem-p (output1[ t ]) p = 
     congoutput1 (rename-env-lem-p t p)
 
 
@@ -713,11 +713,11 @@ module PartialEquivalenceLemmas where
     *-env-extend-subst-lem u (⟦ t ⟧p (λ x → ⟦ s x ⟧v e)) (⟦ subst-p s t ⟧p e') (env-extend-subst-lem-p t p) p
   env-extend-subst-lem-p (app t u) p = 
     env-extend-subst-lem-v t p (env-extend-subst-lem-v u p)
-  env-extend-subst-lem-p (input t u) p = 
+  env-extend-subst-lem-p (input[ t , u ]) p = 
     conginput (env-extend-subst-lem-p t p) (env-extend-subst-lem-p u p)
-  env-extend-subst-lem-p (output0 t) p = 
+  env-extend-subst-lem-p (output0[ t ]) p = 
     congoutput0 (env-extend-subst-lem-p t p) 
-  env-extend-subst-lem-p (output1 t) p = 
+  env-extend-subst-lem-p (output1[ t ]) p = 
     congoutput1 (env-extend-subst-lem-p t p) 
 
   **-strength-lem' : 

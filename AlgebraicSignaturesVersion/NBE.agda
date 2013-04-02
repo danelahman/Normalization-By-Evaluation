@@ -221,9 +221,9 @@ module NBE where
   ⟦_⟧p {Γ} {σ} (return t) e = η {Denot σ} (⟦ t ⟧v e)
   ⟦_⟧p {Γ} {σ} (_to_ {σ'} t u) {Γ'} e = * {(Env-Denot Γ) ⊗ Denot σ'} {Denot σ} (λ v → ⟦ u ⟧p (env-extend ((fst v) {_}) (snd v)) ) {Γ'} ((t-r {Env-Denot Γ} {Denot σ'} {Γ'} (e , ⟦ t ⟧p e)))
   ⟦ app t u ⟧p e = (⟦ t ⟧v e) id (⟦ u ⟧v e)
-  ⟦ input t u ⟧p e = Alg-input (⟦ t ⟧p e) (⟦ u ⟧p e)
-  ⟦ output0 t ⟧p e = Alg-output0 (⟦ t ⟧p e)
-  ⟦ output1 t ⟧p e = Alg-output1 (⟦ t ⟧p e)
+  ⟦ input[ t , u ] ⟧p e = Alg-input (⟦ t ⟧p e) (⟦ u ⟧p e)
+  ⟦ output0[ t ] ⟧p e = Alg-output0 (⟦ t ⟧p e)
+  ⟦ output1[ t ] ⟧p e = Alg-output1 (⟦ t ⟧p e)
 
 
   -- Reification and reflection
@@ -242,9 +242,9 @@ module NBE where
 
   reify-p (T-return t) = returnNP (reify-v t)
   reify-p (T-to t u) = toNP t (reify-p u)
-  reify-p (T-input t u) = inputNP (reify-p t) (reify-p u)
-  reify-p (T-output0 t) = output0NP (reify-p t)
-  reify-p (T-output1 t) = output1NP (reify-p t)
+  reify-p (T-input t u) = inputNP[ (reify-p t) , (reify-p u) ]
+  reify-p (T-output0 t) = output0NP[ (reify-p t) ]
+  reify-p (T-output1 t) = output1NP[ (reify-p t) ]
 
   reflect-p {σ} t = T-to t (η {Denot σ} (reflect-v {σ} (varAV Hd)))
 

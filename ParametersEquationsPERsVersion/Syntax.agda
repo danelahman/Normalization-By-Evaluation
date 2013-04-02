@@ -57,8 +57,8 @@ module Syntax where
     -- producer term for the theory of bits
     if_then_else : {σ : Ty} → Γ ⊢v bit → Γ ⊢p σ → Γ ⊢p σ → Γ ⊢p σ
     -- producer terms for the theory of input/output
-    input : {σ : Ty} → Γ :: bit ⊢p σ → Γ ⊢p σ
-    output : {σ : Ty} → Γ ⊢v bit → Γ ⊢p σ → Γ ⊢p σ
+    input[_] : {σ : Ty} → Γ :: bit ⊢p σ → Γ ⊢p σ
+    output[_,_] : {σ : Ty} → Γ ⊢v bit → Γ ⊢p σ → Γ ⊢p σ
 
 
   infix 4 _⊢v_ 
@@ -98,8 +98,8 @@ module Syntax where
     -- normal producer for the theory of bits
     ifNP_then_else : {σ : Ty} → Γ ⊢nv bit → Γ ⊢np σ → Γ ⊢np σ → Γ ⊢np σ
     -- normal producers for the theory of input/output
-    inputNP : {σ : Ty} → Γ :: bit ⊢np σ → Γ ⊢np σ
-    outputNP : {σ : Ty} → Γ ⊢nv bit → Γ ⊢np σ → Γ ⊢np σ
+    inputNP[_] : {σ : Ty} → Γ :: bit ⊢np σ → Γ ⊢np σ
+    outputNP[_,_] : {σ : Ty} → Γ ⊢nv bit → Γ ⊢np σ → Γ ⊢np σ
 
 
   -- Atomic producer terms

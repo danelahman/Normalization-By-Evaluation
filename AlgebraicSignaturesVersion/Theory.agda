@@ -48,9 +48,9 @@ module Theory where
     congapp : {Γ : Ctx} {σ τ : Ty} {t t' : Γ ⊢v σ ⇀ τ} {u u' : Γ ⊢v σ} → Γ ⊢v t ≡ t' → Γ ⊢v u ≡ u' → Γ ⊢p app t u ≡ app t' u'
     congto : {Γ : Ctx} {σ τ : Ty} {t t' : Γ ⊢p σ} {u u' : Γ :: σ ⊢p τ} → Γ ⊢p t ≡ t' → Γ :: σ ⊢p u ≡ u' → Γ ⊢p (t to u) ≡ (t' to u')
     congreturn : {Γ : Ctx} {σ : Ty} {t t' : Γ ⊢v σ} → Γ ⊢v t ≡ t' → Γ ⊢p (return t) ≡ (return t')
-    conginput : {Γ : Ctx} {σ : Ty} {t t' u u' : Γ ⊢p σ} → Γ ⊢p t ≡ t' → Γ ⊢p u ≡ u' → Γ ⊢p input t u ≡ input t' u'
-    congoutput0 : {Γ : Ctx} {σ : Ty} {t t' : Γ ⊢p σ} → Γ ⊢p t ≡ t' → Γ ⊢p output0 t ≡ output0 t'
-    congoutput1 : {Γ : Ctx} {σ : Ty} {t t' : Γ ⊢p σ} → Γ ⊢p t ≡ t' → Γ ⊢p output1 t ≡ output1 t'
+    conginput : {Γ : Ctx} {σ : Ty} {t t' u u' : Γ ⊢p σ} → Γ ⊢p t ≡ t' → Γ ⊢p u ≡ u' → Γ ⊢p input[ t , u ] ≡ input[ t' , u' ]
+    congoutput0 : {Γ : Ctx} {σ : Ty} {t t' : Γ ⊢p σ} → Γ ⊢p t ≡ t' → Γ ⊢p output0[ t ] ≡ output0[ t' ]
+    congoutput1 : {Γ : Ctx} {σ : Ty} {t t' : Γ ⊢p σ} → Γ ⊢p t ≡ t' → Γ ⊢p output1[ t ] ≡ output1[ t' ]
     -- beta
     β⇀ : {Γ : Ctx} {σ τ : Ty} {t : Γ :: σ ⊢p τ} {u : Γ ⊢v σ} → Γ ⊢p subst-p (ext-subst id-subst u) t ≡ (app (fn t) u)
     βto : {Γ : Ctx} {σ τ : Ty} {t : Γ :: σ ⊢p τ} {u : Γ ⊢v σ} → Γ ⊢p ((return u) to t) ≡ subst-p (ext-subst id-subst u) t
@@ -59,9 +59,9 @@ module Theory where
     -- associativity
     assocto : {Γ : Ctx} {σ τ ρ : Ty} {t : Γ ⊢p σ} {u : Γ :: σ ⊢p τ} {v : Γ :: τ ⊢p ρ} → Γ ⊢p (t to u) to v ≡ (t to (u to ⊢p-rename exchange (⊢p-rename wk₁ v)))
     -- to-op
-    inputto : {Γ : Ctx} {σ τ : Ty} {t u : Γ ⊢p σ} {v : Γ :: σ ⊢p τ} → Γ ⊢p (input t u) to v ≡ input (t to v) (u to v)
-    output0to : {Γ : Ctx} {σ τ : Ty} {t : Γ ⊢p σ} {v : Γ :: σ ⊢p τ} → Γ ⊢p (output0 t) to v ≡ output0 (t to v)
-    output1to : {Γ : Ctx} {σ τ : Ty} {t : Γ ⊢p σ} {v : Γ :: σ ⊢p τ} → Γ ⊢p (output1 t) to v ≡ output1 (t to v)
+    inputto : {Γ : Ctx} {σ τ : Ty} {t u : Γ ⊢p σ} {v : Γ :: σ ⊢p τ} → Γ ⊢p (input[ t , u ]) to v ≡ input[ (t to v) , (u to v) ]
+    output0to : {Γ : Ctx} {σ τ : Ty} {t : Γ ⊢p σ} {v : Γ :: σ ⊢p τ} → Γ ⊢p (output0[ t ]) to v ≡ output0[ (t to v) ]
+    output1to : {Γ : Ctx} {σ τ : Ty} {t : Γ ⊢p σ} {v : Γ :: σ ⊢p τ} → Γ ⊢p (output1[ t ]) to v ≡ output1[ (t to v) ]
 
   -- Equal value terms are equivalent
   ≅2≡-v : 
@@ -153,9 +153,9 @@ module Theory where
     -- congruence
     congreturn : {Γ : Ctx} {σ : Ty} {t u : Γ ⊢nv σ} → Γ ⊢nv t ≡ u → Γ ⊢np (returnNP t) ≡ (returnNP u)
     congto : {Γ : Ctx} {σ τ : Ty} {t t' : Γ ⊢ap σ} {u u' : Γ :: σ ⊢np τ} → Γ ⊢ap t ≡ t' → Γ :: σ ⊢np u ≡ u' → Γ ⊢np (toNP t u) ≡ (toNP t' u')
-    conginput : {Γ : Ctx} {σ : Ty} {t t' u u' : Γ ⊢np σ} → Γ ⊢np t ≡ t' → Γ ⊢np u ≡ u' → Γ ⊢np inputNP t u ≡ inputNP t' u'
-    congoutput0 : {Γ : Ctx} {σ : Ty} {t t' : Γ ⊢np σ} → Γ ⊢np t ≡ t' → Γ ⊢np output0NP t ≡ output0NP t'
-    congoutput1 : {Γ : Ctx} {σ : Ty} {t t' : Γ ⊢np σ} → Γ ⊢np t ≡ t' → Γ ⊢np output1NP t ≡ output1NP t'
+    conginput : {Γ : Ctx} {σ : Ty} {t t' u u' : Γ ⊢np σ} → Γ ⊢np t ≡ t' → Γ ⊢np u ≡ u' → Γ ⊢np inputNP[ t , u ] ≡ inputNP[ t' , u' ]
+    congoutput0 : {Γ : Ctx} {σ : Ty} {t t' : Γ ⊢np σ} → Γ ⊢np t ≡ t' → Γ ⊢np output0NP[ t ] ≡ output0NP[ t' ]
+    congoutput1 : {Γ : Ctx} {σ : Ty} {t t' : Γ ⊢np σ} → Γ ⊢np t ≡ t' → Γ ⊢np output1NP[ t ] ≡ output1NP[ t' ]
 
 
   data _⊢ap_≡_ where
@@ -362,20 +362,20 @@ module Theory where
     ≡p〈 congto (⊢ap-embed-lem p) (⊢np-embed-lem q) 〉
       ⊢ap-embed t' to ⊢np-embed u'
     p∎
-  ⊢np-embed-lem {Γ} {σ} {inputNP t u} {inputNP t' u'} (conginput p q) = 
-      input (⊢np-embed t) (⊢np-embed u)
+  ⊢np-embed-lem {Γ} {σ} {inputNP[ t , u ]} {inputNP[ t' , u' ]} (conginput p q) = 
+      input[ (⊢np-embed t) , (⊢np-embed u) ]
     ≡p〈 conginput (⊢np-embed-lem p) (⊢np-embed-lem q) 〉
-      input (⊢np-embed t') (⊢np-embed u')
+      input[ (⊢np-embed t') , (⊢np-embed u') ]
     p∎
-  ⊢np-embed-lem {Γ} {σ} {output0NP t} {output0NP t'} (congoutput0 p) = 
-      output0 (⊢np-embed t)
+  ⊢np-embed-lem {Γ} {σ} {output0NP[ t ]} {output0NP[ t' ]} (congoutput0 p) = 
+      output0[ (⊢np-embed t) ]
     ≡p〈 congoutput0 (⊢np-embed-lem p) 〉
-      output0 (⊢np-embed t')
+      output0[ (⊢np-embed t') ]
     p∎
-  ⊢np-embed-lem {Γ} {σ} {output1NP t} {output1NP t'} (congoutput1 p) = 
-      output1 (⊢np-embed t)
+  ⊢np-embed-lem {Γ} {σ} {output1NP[ t ]} {output1NP[ t' ]} (congoutput1 p) = 
+      output1[ (⊢np-embed t) ]
     ≡p〈 congoutput1 (⊢np-embed-lem p) 〉
-      output1 (⊢np-embed t')
+      output1[ (⊢np-embed t') ]
     p∎
 
 

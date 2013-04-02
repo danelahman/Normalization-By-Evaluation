@@ -7,7 +7,7 @@
 ------------------------------------------------------
 -- Includes NBE for simple and parametrized         --
 -- algebraic signatures with equations.             --
--- Normalization uses residuating monad and         --
+-- Normalization uses residualizing monad and       --
 -- normal forms are identified up-to equations      --
 -- for the effects.                                 --
 ------------------------------------------------------
@@ -45,13 +45,13 @@ module README where
   -- Presheaves (of values, producers, normal and atomic forms)
   open import Presheaves
 
-  -- Residuating monad
+  -- Residualizing monad
   open import Monad
 
   -- Normalization by evaluation
   -- =================
 
-  -- NbE algorithm together with the residuating interpretation
+  -- NbE algorithm together with the residualizing interpretation
   open import NBE
 
   -- Various lemmas concerning renamings, substitutions and environments

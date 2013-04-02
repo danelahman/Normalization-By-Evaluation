@@ -64,7 +64,6 @@ module Syntax where
   data _⊢av_ (Γ : Ctx) : Ty → Set
   data _⊢np_ (Γ : Ctx) : Ty → Set
   data _⊢np'_ (Γ : Ctx) : Ty → Set
-  data _⊢np''_ (Γ : Ctx) : Ty → Set
   data _⊢ap_ (Γ : Ctx) : Ty → Set
 
 
@@ -83,16 +82,15 @@ module Syntax where
 
 
   -- Normal producer terms
-  data _⊢np''_ Γ where
-    returnNP : {σ : Ty} → Γ ⊢nv σ → Γ ⊢np'' σ
-    toNP : {σ τ : Ty} → Γ ⊢ap σ → (Γ :: σ) ⊢np τ → Γ ⊢np'' τ
-
   data _⊢np'_ Γ where
-    update0NP : {σ : Ty} → Γ ⊢np'' σ → Γ ⊢np' σ
-    update1NP : {σ : Ty} → Γ ⊢np'' σ → Γ ⊢np' σ
+    returnNP : {σ : Ty} → Γ ⊢nv σ → Γ ⊢np' σ
+    toNP : {σ τ : Ty} → Γ ⊢ap σ → (Γ :: σ) ⊢np τ → Γ ⊢np' τ
 
   data _⊢np_ Γ where
-    lookupNP : {σ : Ty} → Γ ⊢np' σ → Γ ⊢np' σ → Γ ⊢np σ
+    lookupNP[_,_] : {σ : Ty} → Γ ⊢np' σ → Γ ⊢np' σ → Γ ⊢np σ
+    lookupNP[update1NP[_],_] : {σ : Ty} → Γ ⊢np' σ → Γ ⊢np' σ → Γ ⊢np σ
+    lookupNP[_,update0NP[_]] : {σ : Ty} → Γ ⊢np' σ → Γ ⊢np' σ → Γ ⊢np σ
+    lookupNP[update1NP[_],update0NP[_]] : {σ : Ty} → Γ ⊢np' σ → Γ ⊢np' σ → Γ ⊢np σ
 
 
   -- Atomic producer terms
@@ -103,6 +101,5 @@ module Syntax where
   infix 4 _⊢av_
   infix 4 _⊢np_
   infix 4 _⊢np'_
-  infix 4 _⊢np''_
   infix 4 _⊢ap_
 

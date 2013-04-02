@@ -122,10 +122,6 @@ module Utils where
   open Unit
 
 
-  data Unit' : Set where
-    unit : Unit'
-
-
   -- Every element of unit type is equal to the unique constructor
   unit-lem : 
     {x : Unit} 

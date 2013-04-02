@@ -91,7 +91,7 @@ module PartialEquivalence where
     ≈T-trans (p (≈-refl {Γ'} {σ} q)) (≈T-sym (p (≈-sym {Γ'} {σ} q)))
 
 
-  -- Local reflexivity of PER on residuating monad
+  -- Local reflexivity of PER on residualizing monad
   ≈T-refl : 
     {Γ : Ctx} 
     {σ : Ty} 

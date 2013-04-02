@@ -32,8 +32,8 @@ module LogicalRelations where
   _◁p_ {Γ} {σ} t (T-to {.Γ} {τ} u d') = Σ (Γ :: τ ⊢p σ) (λ v → (Γ ⊢p t ≡ ((⊢ap-embed u) to v)) × (v ◁p d'))
   _◁p_ {Γ} {σ} t (T-or d d') = Σ (Γ ⊢p σ) (λ u → Σ (Γ ⊢p σ) (λ v → ((Γ ⊢p t ≡ (or u v)) × (u ◁p d) × (v ◁p d'))))
   _◁p_ {Γ} {σ} t (T-if b d d') = Σ (Γ ⊢p σ) (λ u → Σ (Γ ⊢p σ) (λ v → (Γ ⊢p t ≡ (if (⊢nv-embed b) then u else v)) × (u ◁p d) × (v ◁p d')))
-  _◁p_ {Γ} {σ} t (T-input d) = Σ (Γ :: bit ⊢p σ) (λ u → ((Γ ⊢p t ≡ (input u)) × (u ◁p d)))
-  _◁p_ {Γ} {σ} t (T-output b d) = Σ (Γ ⊢p σ) (λ u → (Γ ⊢p t ≡ (output (⊢nv-embed b) u)) × (u ◁p d))
+  _◁p_ {Γ} {σ} t (T-input d) = Σ (Γ :: bit ⊢p σ) (λ u → ((Γ ⊢p t ≡ (input[ u ])) × (u ◁p d)))
+  _◁p_ {Γ} {σ} t (T-output b d) = Σ (Γ ⊢p σ) (λ u → (Γ ⊢p t ≡ (output[ (⊢nv-embed b) , u ])) × (u ◁p d))
   _◁e_ {Γ} {Γ'} s e = {σ : Ty} → (x : σ ∈ Γ) → (s x) ◁v (e x)
 
 
@@ -380,11 +380,11 @@ module LogicalRelations where
     ((subst-p s u) , 
       (((congif (◁v-fundamental-lemma s e b r) ≡-refl ≡-refl) , 
         (◁p-fundamental-lemma s e t r)) , (◁p-fundamental-lemma s e u r)))
-  ◁p-fundamental-lemma s e (input t) r = 
+  ◁p-fundamental-lemma s e (input[ t ]) r = 
     (subst-p (lift s) t) , 
     (≡-refl , 
       (◁p-fundamental-lemma (lift s) (env-extend (env-rename wk₁ e) (bit2NV (varAV Hd))) t (λ x → ◁c-lift-extend-lem r x)))
-  ◁p-fundamental-lemma s e (output b t) r = 
+  ◁p-fundamental-lemma s e (output[ b , t ]) r = 
     (subst-p s t) , 
     ((congoutput (◁v-fundamental-lemma s e b r) ≡-refl) , (◁p-fundamental-lemma s e t r))
 

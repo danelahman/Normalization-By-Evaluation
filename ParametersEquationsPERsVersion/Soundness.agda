@@ -22,7 +22,7 @@ open import PartialEquivalenceLemmas
 module Soundness where
 
 
-  -- Soundness of the residuating interpretations
+  -- Soundness of the residualizing interpretations
   soundness-v : 
     {Γ Γ' : Ctx} 
     {σ : Ty} 
@@ -119,9 +119,9 @@ module Soundness where
     congor (soundness-p t t' p q) (soundness-p u u' p' q)
   soundness-p .(if b then t else u) .(if b' then t' else u') (congif {Γ} {σ} {b} {b'} {t} {u} {t'} {u'} p p' p'') q = 
     congif (soundness-v b b' p q) (soundness-p t t' p' q) (soundness-p u u' p'' q)
-  soundness-p .(input t) .(input t') (conginput {Γ} {σ} {t} {t'} p) q = 
+  soundness-p .(input[ t ]) .(input[ t' ]) (conginput {Γ} {σ} {t} {t'} p) q = 
     conginput (soundness-p t t' p (≈e-extend-lem (≈e-monotonicity q) ≡-refl))
-  soundness-p .(output b t) .(output b' t') (congoutput {Γ} {σ} {b} {b'} {t} {t'} p p') q = 
+  soundness-p .(output[ b , t ]) .(output[ b' , t' ]) (congoutput {Γ} {σ} {b} {b'} {t} {t'} p p') q = 
     congoutput (soundness-v b b' p q) (soundness-p t t' p' q)
   soundness-p {Γ} {Γ'} {τ} {e} {e'} .(subst-p (ext-subst var u) t) .(app (fn t) u) (β⇀ {.Γ} {σ} {.τ} {t} {u}) q = 
     ≈T-trans 
@@ -153,7 +153,7 @@ module Soundness where
       (≈-fundamental-lemma b q) 
       (≈-*-strength-fundamental-lemma {d = ⟦ t ⟧p e} {d' = ⟦ t ⟧p e'} v (≈T-fundamental-lemma t q) q) 
       (≈-*-strength-fundamental-lemma {d = ⟦ u ⟧p e} {d' = ⟦ u ⟧p e'} v (≈T-fundamental-lemma u q) q)
-  soundness-p {Γ} {Γ'} {σ} {e} {e'} .(input t to u) .(input (t to ⊢p-rename exchange (⊢p-rename wk₁ u))) (inputto {.Γ} {σ'} {.σ} {t} {u}) q = 
+  soundness-p {Γ} {Γ'} {σ} {e} {e'} .(input[ t ] to u) .(input[ (t to ⊢p-rename exchange (⊢p-rename wk₁ u)) ]) (inputto {.Γ} {σ'} {.σ} {t} {u}) q = 
     conginput 
       (**-strength-lem' 
         {e = env-rename wk₁ e} 
@@ -165,7 +165,7 @@ module Soundness where
         (≈T-fundamental-lemma t (≈e-extend-lem (≈e-monotonicity q) ≡-refl)) 
         ≡-refl 
         (≈e-monotonicity q))
-  soundness-p {Γ} {Γ'} {σ} {e} {e'} .(output b t to u) .(output b (t to u)) (outputto {.Γ} {σ'} {.σ} {b} {t} {u}) q = 
+  soundness-p {Γ} {Γ'} {σ} {e} {e'} .(output[ b , t ] to u) .(output[ b , (t to u) ]) (outputto {.Γ} {σ'} {.σ} {b} {t} {u}) q = 
     congoutput 
       (≈-fundamental-lemma b q) 
       (≈-*-strength-fundamental-lemma {d = ⟦ t ⟧p e} {d' = ⟦ t ⟧p e'} u (≈T-fundamental-lemma t q) q) 
@@ -295,10 +295,10 @@ module Soundness where
     trans 
       (cong (λ x → reify-p (T-if x (⟦ ⊢np-embed t ⟧p id-env) (⟦ ⊢np-embed u ⟧p id-env))) (reify-stability-v b)) 
       (cong2 (λ x y → ifNP b then x else y) (reify-stability-p t) (reify-stability-p u))
-  reify-stability-p (inputNP t) = 
-    cong inputNP (trans (cong (λ (x : Env _ _) → reify-p (⟦ ⊢np-embed t ⟧p x)) (iext (λ σ → ext (env-ext-reflect-lem)))) (reify-stability-p t))
-  reify-stability-p (outputNP b t) = 
-    cong2 outputNP (reify-stability-v b) (reify-stability-p t)
+  reify-stability-p (inputNP[ t ]) = 
+    cong (λ x → inputNP[ x ]) (trans (cong (λ (x : Env _ _) → reify-p (⟦ ⊢np-embed t ⟧p x)) (iext (λ σ → ext (env-ext-reflect-lem)))) (reify-stability-p t))
+  reify-stability-p (outputNP[ b , t ]) = 
+    cong2 (λ x y → outputNP[ x , y ]) {⟦ ⊢nv-embed b ⟧v id-env} {b} (reify-stability-v b) {reify-p (⟦ ⊢np-embed t ⟧p id-env)} {t} (reify-stability-p t)
 
   reflect-stability-v (varAV x) = 
     refl

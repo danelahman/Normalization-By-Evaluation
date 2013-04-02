@@ -1,9 +1,15 @@
-------------------------------------------------------
-------------- Normalization by evaluation ------------
----------------- and algebraic effects ---------------
-------------------------------------------------------
------------------- Residuating monad -----------------
-------------------------------------------------------
+{-# OPTIONS --no-termination-check #-}
+----------------------------------------------------------
+----------------- Normalization by evaluation ------------
+-------------------- and algebraic effects ---------------
+----------------------------------------------------------
+---------------------- Residuating monad -----------------
+-- Sum of effect free residuating monad and state monad --
+----------------------------------------------------------
+----------------------------------------------------------
+---- PS! Agda does not see the definition of strength ----
+---- terminating. ----------------------------------------
+----------------------------------------------------------
 
 
 open import Utils
@@ -14,36 +20,69 @@ open import Presheaves
 
 module Monad where 
 
-  -- The residual monad
-  data T'' (X : Ctx → Set) : Ctx → Set
-  data T' (X : Ctx → Set) : Ctx → Set
-  data T (X : Ctx → Set) : Ctx → Set
-    
-  data T'' X where
-    T-return : {Γ : Ctx} → X Γ → T'' X Γ
-    T-to : {Γ : Ctx} {σ : Ty} → Γ ⊢ap σ → T X (Γ :: σ) → T'' X Γ
+  -- "Syntax" for (strictly positive) functors for constructing the residuating monad
+  data SPFunctor : Set1 where
+    Id : SPFunctor
+    Const : (Ctx → Set) → SPFunctor
+    _⊕'_ : SPFunctor → SPFunctor → SPFunctor 
+    _⊗'_ : SPFunctor → SPFunctor → SPFunctor
+    ⇒ : (Ctx → Set) → SPFunctor → SPFunctor
+    APTerm :  SPFunctor → SPFunctor
 
-  data T' X where
-    T-update0 : {Γ : Ctx} → T'' X Γ → T' X Γ
-    T-update1 : {Γ : Ctx} → T'' X Γ → T' X Γ
+  infixl 6 _⊕'_
+  infixr 7 _⊗'_
 
-  data T X where
-    T-lookup : {Γ : Ctx} → T' X Γ → T' X Γ → T X Γ
 
-  -- Action of renaming of the residual monad
+  -- "Semantics" of the (strictly positive) functors in Set^Ren for constructing the residuating monad
+  [_]_ : SPFunctor → (Ctx → Set) → (Ctx → Set) 
+  [ Id ] X = λ Γ → X Γ
+  [ Const C ] X = C
+  [ F ⊕' G ] X = λ Γ → ([ F ] X) Γ + ([ G ] X) Γ
+  [ F ⊗' G ] X = λ Γ → ([ F ] X) Γ × ([ G ] X) Γ
+  [ ⇒ C F ] X = λ Γ → C Γ → ([ F ] X) Γ
+  [ APTerm F ] X = λ Γ → Σ Ty (λ σ → (Γ ⊢ap σ) × ([ F ] X) (Γ :: σ) )
+
+
+  -- Least fixed point of the (strictly positive) residuating functor
+  data μ_ (F : SPFunctor) : Ctx → Set where 
+    lfp : {Γ : Ctx} → ([ F ] (μ F)) Γ → (μ F) Γ
+
+
+  -- Object map of the residuating monad
+  T : (Ctx → Set) → (Ctx → Set)
+  T X = μ (⇒ (λ _ → (Unit + Unit)) ((Const (λ _ → (Unit + Unit))) ⊗' (Const X ⊕' APTerm Id)))
+
+
+  -- Action of renaming on for residuating monad
   T-rename : {X : Set^Ren} {Γ Γ' : Ctx} → (f : Ren Γ Γ') → T (set X) Γ → T (set X) Γ'
-  T'-rename : {X : Set^Ren} {Γ Γ' : Ctx} → (f : Ren Γ Γ') → T' (set X) Γ → T' (set X) Γ'
-  T''-rename : {X : Set^Ren} {Γ Γ' : Ctx} → (f : Ren Γ Γ') → T'' (set X) Γ → T'' (set X) Γ'
+  T-rename-helper : {X : Set^Ren} {Γ Γ' : Ctx} → (f : Ren Γ Γ')  
+    → set X Γ +
+        Σ Ty
+        (λ σ →
+           Σ (Γ ⊢ap σ)
+           (λ _ →
+              (μ
+               ⇒ (λ _ → Unit + Unit)
+               (Const (λ _ → Unit + Unit) ⊗' (Const (set X) ⊕' APTerm Id)))
+              (Γ :: σ)))
+    → set X Γ' +
+      Σ Ty
+      (λ σ →
+         Σ (Γ' ⊢ap σ)
+         (λ _ →
+            (μ
+             ⇒ (λ _ → Unit + Unit)
+             (Const (λ _ → Unit + Unit) ⊗' (Const (set X) ⊕' APTerm Id)))
+            (Γ' :: σ)))
 
-  T-rename {X} {Γ} {Γ'} f (T-lookup d d') = T-lookup (T'-rename {X} {Γ} {Γ'} f d) (T'-rename {X} {Γ} {Γ'} f d')
+  T-rename-helper {X} f (inl d) = inl (act X f d)
+  T-rename-helper {X} f (inr (σ , (t , d))) = inr (σ , ((act (APTerms σ) f t) , T-rename {X} (wk₂ f) d))
 
-  T'-rename {X} {Γ} {Γ'} f (T-update0 d) = T-update0 (T''-rename {X} {Γ} {Γ'} f d)
-  T'-rename {X} {Γ} {Γ'} f (T-update1 d) = T-update1 (T''-rename {X} {Γ} {Γ'} f d)
+  T-rename {X} {Γ} {Γ'} f (lfp d) = lfp (λ b → 
+    (fst (d b)) , T-rename-helper {X} f (snd (d b)))
 
-  T''-rename {X} {Γ} {Γ'} f (T-return x) = T-return ((act X) f x)
-  T''-rename {X} {Γ} {Γ'} f (T-to {.Γ} {σ} t d) = T-to (⊢ap-rename f t) (T-rename {X} {Γ :: σ} {Γ' :: σ} (wk₂ f) d)
 
-  -- The residual monad on presheaves
+  -- Residuating monad on presheaves
   T-Set^Ren : Set^Ren → Set^Ren
   T-Set^Ren X = 
     record {
@@ -51,187 +90,99 @@ module Monad where
       act = T-rename {X}
     }
 
-  -- Unit of the residual monad
+
+  -- Unit of the residuating monad
   η : {X : Set^Ren} → Set^Ren-Map X (T-Set^Ren X)
-  η d = T-lookup (T-update0 (T-return d)) (T-update1 (T-return d))
+  η d = lfp (λ {(inl b) → (inl b) , (inl d) ; (inr b) → (inr b) , (inl d)})
 
 
-  -- Kleisli extension of the residual monad
+  -- Kleisli extension
   * : {X Y : Set^Ren} → (Set^Ren-Map X (T-Set^Ren Y)) → Set^Ren-Map (T-Set^Ren X) (T-Set^Ren Y)
+  *-helper : {X Y : Set^Ren} {Γ : Ctx} → 
+    (f  : {Γ : List Ty} →
+     set X Γ →
+     (μ
+      ⇒ (λ _ → Unit + Unit)
+      (Const (λ _ → Unit + Unit) ⊗' (Const (set Y) ⊕' APTerm Id)))
+     Γ)
+    → 
+    Σ (Unit + Unit)
+     (λ _ →
+        set X Γ +
+        Σ Ty
+        (λ σ →
+           Σ (Γ ⊢ap σ)
+           (λ _ →
+              (μ
+               ⇒ (λ _ → Unit + Unit)
+               (Const (λ _ → Unit + Unit) ⊗' (Const (set X) ⊕' APTerm Id)))
+              (Γ :: σ))))
+    →
+    Σ (Unit + Unit)
+      (λ _ →
+         set Y Γ +
+         Σ Ty
+         (λ σ →
+            Σ (Γ ⊢ap σ)
+            (λ _ →
+               (μ
+                ⇒ (λ _ → Unit + Unit)
+                (Const (λ _ → Unit + Unit) ⊗' (Const (set Y) ⊕' APTerm Id)))
+               (Γ :: σ))))
 
-  * f (T-lookup (T-update0 (T-return d)) (T-update0 (T-return d'))) with f d | f d'
-  * f (T-lookup (T-update0 (T-return d)) (T-update0 (T-return d'))) | T-lookup (T-update0 a) (T-update0 a') | T-lookup (T-update0 b) (T-update0 b') = T-lookup (T-update0 a) (T-update0 b)
-  * f (T-lookup (T-update0 (T-return d)) (T-update0 (T-return d'))) | T-lookup (T-update0 a) (T-update0 a') | T-lookup (T-update0 b) (T-update1 b') = T-lookup (T-update0 a) (T-update0 b)
-  * f (T-lookup (T-update0 (T-return d)) (T-update0 (T-return d'))) | T-lookup (T-update0 a) (T-update0 a') | T-lookup (T-update1 b) (T-update0 b') = T-lookup (T-update0 a) (T-update1 b)
-  * f (T-lookup (T-update0 (T-return d)) (T-update0 (T-return d'))) | T-lookup (T-update0 a) (T-update0 a') | T-lookup (T-update1 b) (T-update1 b') = T-lookup (T-update0 a) (T-update1 b)
-  * f (T-lookup (T-update0 (T-return d)) (T-update0 (T-return d'))) | T-lookup (T-update0 a) (T-update1 a') | T-lookup (T-update0 b) (T-update0 b') = T-lookup (T-update0 a) (T-update0 b)
-  * f (T-lookup (T-update0 (T-return d)) (T-update0 (T-return d'))) | T-lookup (T-update0 a) (T-update1 a') | T-lookup (T-update0 b) (T-update1 b') = T-lookup (T-update0 a) (T-update0 b)
-  * f (T-lookup (T-update0 (T-return d)) (T-update0 (T-return d'))) | T-lookup (T-update0 a) (T-update1 a') | T-lookup (T-update1 b) (T-update0 b') = T-lookup (T-update0 a) (T-update1 b)
-  * f (T-lookup (T-update0 (T-return d)) (T-update0 (T-return d'))) | T-lookup (T-update0 a) (T-update1 a') | T-lookup (T-update1 b) (T-update1 b') = T-lookup (T-update0 a) (T-update1 b)
-  * f (T-lookup (T-update0 (T-return d)) (T-update0 (T-return d'))) | T-lookup (T-update1 a) (T-update0 a') | T-lookup (T-update0 b) (T-update0 b') = T-lookup (T-update1 a) (T-update0 b)
-  * f (T-lookup (T-update0 (T-return d)) (T-update0 (T-return d'))) | T-lookup (T-update1 a) (T-update0 a') | T-lookup (T-update0 b) (T-update1 b') = T-lookup (T-update1 a) (T-update0 b)
-  * f (T-lookup (T-update0 (T-return d)) (T-update0 (T-return d'))) | T-lookup (T-update1 a) (T-update0 a') | T-lookup (T-update1 b) (T-update0 b') = T-lookup (T-update1 a) (T-update1 b)
-  * f (T-lookup (T-update0 (T-return d)) (T-update0 (T-return d'))) | T-lookup (T-update1 a) (T-update0 a') | T-lookup (T-update1 b) (T-update1 b') = T-lookup (T-update1 a) (T-update1 b)
-  * f (T-lookup (T-update0 (T-return d)) (T-update0 (T-return d'))) | T-lookup (T-update1 a) (T-update1 a') | T-lookup (T-update0 b) (T-update0 b') = T-lookup (T-update1 a) (T-update0 b)
-  * f (T-lookup (T-update0 (T-return d)) (T-update0 (T-return d'))) | T-lookup (T-update1 a) (T-update1 a') | T-lookup (T-update0 b) (T-update1 b') = T-lookup (T-update1 a) (T-update0 b)
-  * f (T-lookup (T-update0 (T-return d)) (T-update0 (T-return d'))) | T-lookup (T-update1 a) (T-update1 a') | T-lookup (T-update1 b) (T-update0 b') = T-lookup (T-update1 a) (T-update1 b)
-  * f (T-lookup (T-update0 (T-return d)) (T-update0 (T-return d'))) | T-lookup (T-update1 a) (T-update1 a') | T-lookup (T-update1 b) (T-update1 b') = T-lookup (T-update1 a) (T-update1 b)
-  * {X} {Y} f (T-lookup (T-update0 (T-return d)) (T-update0 (T-to t' d'))) with f d
-  * {X} {Y} f (T-lookup (T-update0 (T-return d)) (T-update0 (T-to t' d'))) | T-lookup (T-update0 a) (T-update0 a') = T-lookup (T-update0 a) (T-update0 (T-to t' (* {X} {Y} f d')))
-  * {X} {Y} f (T-lookup (T-update0 (T-return d)) (T-update0 (T-to t' d'))) | T-lookup (T-update0 a) (T-update1 a') = T-lookup (T-update0 a) (T-update0 (T-to t' (* {X} {Y} f d')))
-  * {X} {Y} f (T-lookup (T-update0 (T-return d)) (T-update0 (T-to t' d'))) | T-lookup (T-update1 a) (T-update0 a') = T-lookup (T-update1 a) (T-update0 (T-to t' (* {X} {Y} f d')))
-  * {X} {Y} f (T-lookup (T-update0 (T-return d)) (T-update0 (T-to t' d'))) | T-lookup (T-update1 a) (T-update1 a') = T-lookup (T-update1 a) (T-update0 (T-to t' (* {X} {Y} f d')))
-  * {X} {Y} f (T-lookup (T-update0 (T-to t d)) (T-update0 (T-return d'))) with f d' 
-  * {X} {Y} f (T-lookup (T-update0 (T-to t d)) (T-update0 (T-return d'))) | T-lookup (T-update0 b) (T-update0 b') = T-lookup (T-update0 (T-to t (* {X} {Y} f d))) (T-update0 b)
-  * {X} {Y} f (T-lookup (T-update0 (T-to t d)) (T-update0 (T-return d'))) | T-lookup (T-update0 b) (T-update1 b') = T-lookup (T-update0 (T-to t (* {X} {Y} f d))) (T-update0 b)
-  * {X} {Y} f (T-lookup (T-update0 (T-to t d)) (T-update0 (T-return d'))) | T-lookup (T-update1 b) (T-update0 b') = T-lookup (T-update0 (T-to t (* {X} {Y} f d))) (T-update1 b)
-  * {X} {Y} f (T-lookup (T-update0 (T-to t d)) (T-update0 (T-return d'))) | T-lookup (T-update1 b) (T-update1 b') = T-lookup (T-update0 (T-to t (* {X} {Y} f d))) (T-update1 b)
-  * {X} {Y} f (T-lookup (T-update0 (T-to t d)) (T-update0 (T-to t' d'))) = T-lookup (T-update0 (T-to t (* {X} {Y} f d))) (T-update0 (T-to t' (* {X} {Y} f d')))
+  *-helper f (b , inl d) with (f d)
+  *-helper f (b , inl d) | lfp d' = d' b
+  *-helper {X} {Y} f (b , inr (σ , (t , d))) = b , (inr (σ , (t , * {X} {Y} f d)))
 
-  * f (T-lookup (T-update0 (T-return d)) (T-update1 (T-return d'))) with f d | f d'
-  * f (T-lookup (T-update0 (T-return d)) (T-update1 (T-return d'))) | T-lookup (T-update0 a) (T-update0 a') | T-lookup (T-update0 b) (T-update0 b') = T-lookup (T-update0 a) (T-update0 b')
-  * f (T-lookup (T-update0 (T-return d)) (T-update1 (T-return d'))) | T-lookup (T-update0 a) (T-update0 a') | T-lookup (T-update0 b) (T-update1 b') = T-lookup (T-update0 a) (T-update1 b')
-  * f (T-lookup (T-update0 (T-return d)) (T-update1 (T-return d'))) | T-lookup (T-update0 a) (T-update0 a') | T-lookup (T-update1 b) (T-update0 b') = T-lookup (T-update0 a) (T-update0 b')
-  * f (T-lookup (T-update0 (T-return d)) (T-update1 (T-return d'))) | T-lookup (T-update0 a) (T-update0 a') | T-lookup (T-update1 b) (T-update1 b') = T-lookup (T-update0 a) (T-update1 b')
-  * f (T-lookup (T-update0 (T-return d)) (T-update1 (T-return d'))) | T-lookup (T-update0 a) (T-update1 a') | T-lookup (T-update0 b) (T-update0 b') = T-lookup (T-update0 a) (T-update0 b')
-  * f (T-lookup (T-update0 (T-return d)) (T-update1 (T-return d'))) | T-lookup (T-update0 a) (T-update1 a') | T-lookup (T-update0 b) (T-update1 b') = T-lookup (T-update0 a) (T-update1 b')
-  * f (T-lookup (T-update0 (T-return d)) (T-update1 (T-return d'))) | T-lookup (T-update0 a) (T-update1 a') | T-lookup (T-update1 b) (T-update0 b') = T-lookup (T-update0 a) (T-update0 b')
-  * f (T-lookup (T-update0 (T-return d)) (T-update1 (T-return d'))) | T-lookup (T-update0 a) (T-update1 a') | T-lookup (T-update1 b) (T-update1 b') = T-lookup (T-update0 a) (T-update1 b')
-  * f (T-lookup (T-update0 (T-return d)) (T-update1 (T-return d'))) | T-lookup (T-update1 a) (T-update0 a') | T-lookup (T-update0 b) (T-update0 b') = T-lookup (T-update1 a) (T-update0 b')
-  * f (T-lookup (T-update0 (T-return d)) (T-update1 (T-return d'))) | T-lookup (T-update1 a) (T-update0 a') | T-lookup (T-update0 b) (T-update1 b') = T-lookup (T-update1 a) (T-update1 b')
-  * f (T-lookup (T-update0 (T-return d)) (T-update1 (T-return d'))) | T-lookup (T-update1 a) (T-update0 a') | T-lookup (T-update1 b) (T-update0 b') = T-lookup (T-update1 a) (T-update0 b')
-  * f (T-lookup (T-update0 (T-return d)) (T-update1 (T-return d'))) | T-lookup (T-update1 a) (T-update0 a') | T-lookup (T-update1 b) (T-update1 b') = T-lookup (T-update1 a) (T-update1 b')
-  * f (T-lookup (T-update0 (T-return d)) (T-update1 (T-return d'))) | T-lookup (T-update1 a) (T-update1 a') | T-lookup (T-update0 b) (T-update0 b') = T-lookup (T-update1 a) (T-update0 b')
-  * f (T-lookup (T-update0 (T-return d)) (T-update1 (T-return d'))) | T-lookup (T-update1 a) (T-update1 a') | T-lookup (T-update0 b) (T-update1 b') = T-lookup (T-update1 a) (T-update1 b')
-  * f (T-lookup (T-update0 (T-return d)) (T-update1 (T-return d'))) | T-lookup (T-update1 a) (T-update1 a') | T-lookup (T-update1 b) (T-update0 b') = T-lookup (T-update1 a) (T-update1 b')
-  * f (T-lookup (T-update0 (T-return d)) (T-update1 (T-return d'))) | T-lookup (T-update1 a) (T-update1 a') | T-lookup (T-update1 b) (T-update1 b') = T-lookup (T-update1 a) (T-update0 b')
-  * {X} {Y} f (T-lookup (T-update0 (T-return d)) (T-update1 (T-to t' d'))) with f d
-  * {X} {Y} f (T-lookup (T-update0 (T-return d)) (T-update1 (T-to t' d'))) | T-lookup (T-update0 a) (T-update0 a') = T-lookup (T-update0 a) (T-update1 (T-to t' (* {X} {Y} f d')))
-  * {X} {Y} f (T-lookup (T-update0 (T-return d)) (T-update1 (T-to t' d'))) | T-lookup (T-update0 a) (T-update1 a') = T-lookup (T-update0 a) (T-update1 (T-to t' (* {X} {Y} f d')))
-  * {X} {Y} f (T-lookup (T-update0 (T-return d)) (T-update1 (T-to t' d'))) | T-lookup (T-update1 a) (T-update0 a') = T-lookup (T-update1 a) (T-update1 (T-to t' (* {X} {Y} f d')))
-  * {X} {Y} f (T-lookup (T-update0 (T-return d)) (T-update1 (T-to t' d'))) | T-lookup (T-update1 a) (T-update1 a') = T-lookup (T-update1 a) (T-update1 (T-to t' (* {X} {Y} f d')))
-  * {X} {Y} f (T-lookup (T-update0 (T-to t d)) (T-update1 (T-return d'))) with f d' 
-  * {X} {Y} f (T-lookup (T-update0 (T-to t d)) (T-update1 (T-return d'))) | T-lookup (T-update0 b) (T-update0 b') = T-lookup (T-update0 (T-to t (* {X} {Y} f d))) (T-update0 b')
-  * {X} {Y} f (T-lookup (T-update0 (T-to t d)) (T-update1 (T-return d'))) | T-lookup (T-update0 b) (T-update1 b') = T-lookup (T-update0 (T-to t (* {X} {Y} f d))) (T-update1 b')
-  * {X} {Y} f (T-lookup (T-update0 (T-to t d)) (T-update1 (T-return d'))) | T-lookup (T-update1 b) (T-update0 b') = T-lookup (T-update0 (T-to t (* {X} {Y} f d))) (T-update0 b')
-  * {X} {Y} f (T-lookup (T-update0 (T-to t d)) (T-update1 (T-return d'))) | T-lookup (T-update1 b) (T-update1 b') = T-lookup (T-update0 (T-to t (* {X} {Y} f d))) (T-update1 b')
-  * {X} {Y} f (T-lookup (T-update0 (T-to t d)) (T-update1 (T-to t' d'))) = T-lookup (T-update0 (T-to t (* {X} {Y} f d))) (T-update1 (T-to t' (* {X} {Y} f d')))
-
-  * f (T-lookup (T-update1 (T-return d)) (T-update0 (T-return d'))) with f d | f d'
-  * f (T-lookup (T-update1 (T-return d)) (T-update0 (T-return d'))) | T-lookup (T-update0 a) (T-update0 a') | T-lookup (T-update0 b) (T-update0 b') = T-lookup (T-update0 a') (T-update0 b)
-  * f (T-lookup (T-update1 (T-return d)) (T-update0 (T-return d'))) | T-lookup (T-update0 a) (T-update0 a') | T-lookup (T-update0 b) (T-update1 b') = T-lookup (T-update0 a') (T-update0 b)
-  * f (T-lookup (T-update1 (T-return d)) (T-update0 (T-return d'))) | T-lookup (T-update0 a) (T-update0 a') | T-lookup (T-update1 b) (T-update0 b') = T-lookup (T-update0 a') (T-update1 b)
-  * f (T-lookup (T-update1 (T-return d)) (T-update0 (T-return d'))) | T-lookup (T-update0 a) (T-update0 a') | T-lookup (T-update1 b) (T-update1 b') = T-lookup (T-update0 a') (T-update1 b)
-  * f (T-lookup (T-update1 (T-return d)) (T-update0 (T-return d'))) | T-lookup (T-update0 a) (T-update1 a') | T-lookup (T-update0 b) (T-update0 b') = T-lookup (T-update1 a') (T-update0 b)
-  * f (T-lookup (T-update1 (T-return d)) (T-update0 (T-return d'))) | T-lookup (T-update0 a) (T-update1 a') | T-lookup (T-update0 b) (T-update1 b') = T-lookup (T-update1 a') (T-update0 b)
-  * f (T-lookup (T-update1 (T-return d)) (T-update0 (T-return d'))) | T-lookup (T-update0 a) (T-update1 a') | T-lookup (T-update1 b) (T-update0 b') = T-lookup (T-update1 a') (T-update1 b)
-  * f (T-lookup (T-update1 (T-return d)) (T-update0 (T-return d'))) | T-lookup (T-update0 a) (T-update1 a') | T-lookup (T-update1 b) (T-update1 b') = T-lookup (T-update1 a') (T-update1 b)
-  * f (T-lookup (T-update1 (T-return d)) (T-update0 (T-return d'))) | T-lookup (T-update1 a) (T-update0 a') | T-lookup (T-update0 b) (T-update0 b') = T-lookup (T-update0 a') (T-update0 b)
-  * f (T-lookup (T-update1 (T-return d)) (T-update0 (T-return d'))) | T-lookup (T-update1 a) (T-update0 a') | T-lookup (T-update0 b) (T-update1 b') = T-lookup (T-update0 a') (T-update0 b)
-  * f (T-lookup (T-update1 (T-return d)) (T-update0 (T-return d'))) | T-lookup (T-update1 a) (T-update0 a') | T-lookup (T-update1 b) (T-update0 b') = T-lookup (T-update0 a') (T-update1 b)
-  * f (T-lookup (T-update1 (T-return d)) (T-update0 (T-return d'))) | T-lookup (T-update1 a) (T-update0 a') | T-lookup (T-update1 b) (T-update1 b') = T-lookup (T-update0 a') (T-update1 b)
-  * f (T-lookup (T-update1 (T-return d)) (T-update0 (T-return d'))) | T-lookup (T-update1 a) (T-update1 a') | T-lookup (T-update0 b) (T-update0 b') = T-lookup (T-update1 a') (T-update0 b)
-  * f (T-lookup (T-update1 (T-return d)) (T-update0 (T-return d'))) | T-lookup (T-update1 a) (T-update1 a') | T-lookup (T-update0 b) (T-update1 b') = T-lookup (T-update1 a') (T-update0 b)
-  * f (T-lookup (T-update1 (T-return d)) (T-update0 (T-return d'))) | T-lookup (T-update1 a) (T-update1 a') | T-lookup (T-update1 b) (T-update0 b') = T-lookup (T-update1 a') (T-update1 b)
-  * f (T-lookup (T-update1 (T-return d)) (T-update0 (T-return d'))) | T-lookup (T-update1 a) (T-update1 a') | T-lookup (T-update1 b) (T-update1 b') = T-lookup (T-update1 a') (T-update1 b)
-  * {X} {Y} f (T-lookup (T-update1 (T-return d)) (T-update0 (T-to t' d'))) with f d
-  * {X} {Y} f (T-lookup (T-update1 (T-return d)) (T-update0 (T-to t' d'))) | T-lookup (T-update0 a) (T-update0 a') = T-lookup (T-update0 a') (T-update0 (T-to t' (* {X} {Y} f d')))
-  * {X} {Y} f (T-lookup (T-update1 (T-return d)) (T-update0 (T-to t' d'))) | T-lookup (T-update0 a) (T-update1 a') = T-lookup (T-update1 a') (T-update0 (T-to t' (* {X} {Y} f d')))
-  * {X} {Y} f (T-lookup (T-update1 (T-return d)) (T-update0 (T-to t' d'))) | T-lookup (T-update1 a) (T-update0 a') = T-lookup (T-update0 a') (T-update0 (T-to t' (* {X} {Y} f d')))
-  * {X} {Y} f (T-lookup (T-update1 (T-return d)) (T-update0 (T-to t' d'))) | T-lookup (T-update1 a) (T-update1 a') = T-lookup (T-update1 a') (T-update0 (T-to t' (* {X} {Y} f d')))
-  * {X} {Y} f (T-lookup (T-update1 (T-to t d)) (T-update0 (T-return d'))) with f d' 
-  * {X} {Y} f (T-lookup (T-update1 (T-to t d)) (T-update0 (T-return d'))) | T-lookup (T-update0 b) (T-update0 b') = T-lookup (T-update1 (T-to t (* {X} {Y} f d))) (T-update0 b)
-  * {X} {Y} f (T-lookup (T-update1 (T-to t d)) (T-update0 (T-return d'))) | T-lookup (T-update0 b) (T-update1 b') = T-lookup (T-update1 (T-to t (* {X} {Y} f d))) (T-update0 b)
-  * {X} {Y} f (T-lookup (T-update1 (T-to t d)) (T-update0 (T-return d'))) | T-lookup (T-update1 b) (T-update0 b') = T-lookup (T-update1 (T-to t (* {X} {Y} f d))) (T-update1 b)
-  * {X} {Y} f (T-lookup (T-update1 (T-to t d)) (T-update0 (T-return d'))) | T-lookup (T-update1 b) (T-update1 b') = T-lookup (T-update1 (T-to t (* {X} {Y} f d))) (T-update1 b)
-  * {X} {Y} f (T-lookup (T-update1 (T-to t d)) (T-update0 (T-to t' d'))) = T-lookup (T-update1 (T-to t (* {X} {Y} f d))) (T-update0 (T-to t' (* {X} {Y} f d')))
-
-  * f (T-lookup (T-update1 (T-return d)) (T-update1 (T-return d'))) with f d | f d'
-  * f (T-lookup (T-update1 (T-return d)) (T-update1 (T-return d'))) | T-lookup (T-update0 a) (T-update0 a') | T-lookup (T-update0 b) (T-update0 b') = T-lookup (T-update0 a') (T-update0 b')
-  * f (T-lookup (T-update1 (T-return d)) (T-update1 (T-return d'))) | T-lookup (T-update0 a) (T-update0 a') | T-lookup (T-update0 b) (T-update1 b') = T-lookup (T-update0 a') (T-update1 b')
-  * f (T-lookup (T-update1 (T-return d)) (T-update1 (T-return d'))) | T-lookup (T-update0 a) (T-update0 a') | T-lookup (T-update1 b) (T-update0 b') = T-lookup (T-update0 a') (T-update0 b')
-  * f (T-lookup (T-update1 (T-return d)) (T-update1 (T-return d'))) | T-lookup (T-update0 a) (T-update0 a') | T-lookup (T-update1 b) (T-update1 b') = T-lookup (T-update0 a') (T-update1 b')
-  * f (T-lookup (T-update1 (T-return d)) (T-update1 (T-return d'))) | T-lookup (T-update0 a) (T-update1 a') | T-lookup (T-update0 b) (T-update0 b') = T-lookup (T-update1 a') (T-update0 b')
-  * f (T-lookup (T-update1 (T-return d)) (T-update1 (T-return d'))) | T-lookup (T-update0 a) (T-update1 a') | T-lookup (T-update0 b) (T-update1 b') = T-lookup (T-update1 a') (T-update1 b')
-  * f (T-lookup (T-update1 (T-return d)) (T-update1 (T-return d'))) | T-lookup (T-update0 a) (T-update1 a') | T-lookup (T-update1 b) (T-update0 b') = T-lookup (T-update1 a') (T-update0 b')
-  * f (T-lookup (T-update1 (T-return d)) (T-update1 (T-return d'))) | T-lookup (T-update0 a) (T-update1 a') | T-lookup (T-update1 b) (T-update1 b') = T-lookup (T-update1 a') (T-update1 b')
-  * f (T-lookup (T-update1 (T-return d)) (T-update1 (T-return d'))) | T-lookup (T-update1 a) (T-update0 a') | T-lookup (T-update0 b) (T-update0 b') = T-lookup (T-update0 a') (T-update0 b')
-  * f (T-lookup (T-update1 (T-return d)) (T-update1 (T-return d'))) | T-lookup (T-update1 a) (T-update0 a') | T-lookup (T-update0 b) (T-update1 b') = T-lookup (T-update0 a') (T-update1 b')
-  * f (T-lookup (T-update1 (T-return d)) (T-update1 (T-return d'))) | T-lookup (T-update1 a) (T-update0 a') | T-lookup (T-update1 b) (T-update0 b') = T-lookup (T-update0 a') (T-update0 b')
-  * f (T-lookup (T-update1 (T-return d)) (T-update1 (T-return d'))) | T-lookup (T-update1 a) (T-update0 a') | T-lookup (T-update1 b) (T-update1 b') = T-lookup (T-update0 a') (T-update1 b')
-  * f (T-lookup (T-update1 (T-return d)) (T-update1 (T-return d'))) | T-lookup (T-update1 a) (T-update1 a') | T-lookup (T-update0 b) (T-update0 b') = T-lookup (T-update1 a') (T-update0 b')
-  * f (T-lookup (T-update1 (T-return d)) (T-update1 (T-return d'))) | T-lookup (T-update1 a) (T-update1 a') | T-lookup (T-update0 b) (T-update1 b') = T-lookup (T-update1 a') (T-update1 b')
-  * f (T-lookup (T-update1 (T-return d)) (T-update1 (T-return d'))) | T-lookup (T-update1 a) (T-update1 a') | T-lookup (T-update1 b) (T-update0 b') = T-lookup (T-update1 a') (T-update0 b')
-  * f (T-lookup (T-update1 (T-return d)) (T-update1 (T-return d'))) | T-lookup (T-update1 a) (T-update1 a') | T-lookup (T-update1 b) (T-update1 b') = T-lookup (T-update1 a') (T-update1 b')
-  * {X} {Y} f (T-lookup (T-update1 (T-return d)) (T-update1 (T-to t' d'))) with f d
-  * {X} {Y} f (T-lookup (T-update1 (T-return d)) (T-update1 (T-to t' d'))) | T-lookup (T-update0 a) (T-update0 a') = T-lookup (T-update0 a') (T-update1 (T-to t' (* {X} {Y} f d')))
-  * {X} {Y} f (T-lookup (T-update1 (T-return d)) (T-update1 (T-to t' d'))) | T-lookup (T-update0 a) (T-update1 a') = T-lookup (T-update1 a') (T-update1 (T-to t' (* {X} {Y} f d')))
-  * {X} {Y} f (T-lookup (T-update1 (T-return d)) (T-update1 (T-to t' d'))) | T-lookup (T-update1 a) (T-update0 a') = T-lookup (T-update0 a') (T-update1 (T-to t' (* {X} {Y} f d')))
-  * {X} {Y} f (T-lookup (T-update1 (T-return d)) (T-update1 (T-to t' d'))) | T-lookup (T-update1 a) (T-update1 a') = T-lookup (T-update1 a') (T-update1 (T-to t' (* {X} {Y} f d')))
-  * {X} {Y} f (T-lookup (T-update1 (T-to t d)) (T-update1 (T-return d'))) with f d' 
-  * {X} {Y} f (T-lookup (T-update1 (T-to t d)) (T-update1 (T-return d'))) | T-lookup (T-update0 b) (T-update0 b') = T-lookup (T-update1 (T-to t (* {X} {Y} f d))) (T-update0 b')
-  * {X} {Y} f (T-lookup (T-update1 (T-to t d)) (T-update1 (T-return d'))) | T-lookup (T-update0 b) (T-update1 b') = T-lookup (T-update1 (T-to t (* {X} {Y} f d))) (T-update1 b')
-  * {X} {Y} f (T-lookup (T-update1 (T-to t d)) (T-update1 (T-return d'))) | T-lookup (T-update1 b) (T-update0 b') = T-lookup (T-update1 (T-to t (* {X} {Y} f d))) (T-update0 b')
-  * {X} {Y} f (T-lookup (T-update1 (T-to t d)) (T-update1 (T-return d'))) | T-lookup (T-update1 b) (T-update1 b') = T-lookup (T-update1 (T-to t (* {X} {Y} f d))) (T-update1 b')
-  * {X} {Y} f (T-lookup (T-update1 (T-to t d)) (T-update1 (T-to t' d'))) = T-lookup (T-update1 (T-to t (* {X} {Y} f d))) (T-update1 (T-to t' (* {X} {Y} f d')))
+  * {X} {Y} f (lfp d) = lfp (λ b → *-helper {X} {Y} f (d b))
 
 
-  -- Strength of the residual monad
-  t-r : {X Y : Set^Ren} → Set^Ren-Map (X ⊗ (T-Set^Ren Y)) (T-Set^Ren (X ⊗ Y))
-  t-r {X} {Y} {Γ}  (a , T-lookup (T-update0 (T-return d)) (T-update0 (T-return d'))) = T-lookup (T-update0 (T-return (a , d))) (T-update0 (T-return (a , d')))
-  t-r {X} {Y} {Γ}  (a , T-lookup (T-update0 (T-return d)) (T-update0 (T-to {.Γ} {σ} t' d'))) = T-lookup (T-update0 (T-return (a , d))) (T-update0 (T-to t' (t-r {X} {Y} {Γ :: σ} (act X wk₁ a , d'))))
-  t-r {X} {Y} {Γ}  (a , T-lookup (T-update0 (T-to {.Γ} {σ} t d)) (T-update0 (T-return d'))) = T-lookup (T-update0 (T-to t (t-r {X} {Y} {Γ :: σ} (act X wk₁ a , d)))) (T-update0 (T-return (a , d')))
-  t-r {X} {Y} {Γ}  (a , T-lookup (T-update0 (T-to {.Γ} {σ} t d)) (T-update0 (T-to {.Γ} {σ'} t' d'))) = T-lookup (T-update0 (T-to t (t-r {X} {Y} {Γ :: σ} (act X wk₁ a , d)))) (T-update0 (T-to t' (t-r {X} {Y} {Γ :: σ'} (act X wk₁ a , d'))))
+  -- Strength of the residuating monad
+  strength : {X Y : Set^Ren} → Set^Ren-Map (X ⊗ (T-Set^Ren Y)) (T-Set^Ren (X ⊗ Y))
+  strength-helper : {X Y : Set^Ren} {Γ : Ctx} → (a : set X Γ) →
+    Σ (Unit + Unit)
+    (λ _ →
+       set Y Γ +
+       Σ Ty
+       (λ σ →
+          Σ (Γ ⊢ap σ)
+          (λ _ →
+             (μ
+              ⇒ (λ _ → Unit + Unit)
+              (Const (λ _ → Unit + Unit) ⊗' (Const (set Y) ⊕' APTerm Id)))
+             (Γ :: σ)))) → 
+    Σ (Unit + Unit)
+      (λ _ →
+         Σ (set X Γ) (λ _ → set Y Γ) +
+         Σ Ty
+         (λ σ →
+            Σ (Γ ⊢ap σ)
+            (λ _ →
+               (μ
+                ⇒ (λ _ → Unit + Unit)
+                (Const (λ _ → Unit + Unit) ⊗'
+                 (Const (λ Γ₁ → Σ (set X Γ₁) (λ _ → set Y Γ₁)) ⊕' APTerm Id)))
+               (Γ :: σ))))
 
-  t-r {X} {Y} {Γ}  (a , T-lookup (T-update0 (T-return d)) (T-update1 (T-return d'))) = T-lookup (T-update0 (T-return (a , d))) (T-update1 (T-return (a , d')))
-  t-r {X} {Y} {Γ}  (a , T-lookup (T-update0 (T-return d)) (T-update1 (T-to {.Γ} {σ} t' d'))) = T-lookup (T-update0 (T-return (a , d))) (T-update1 (T-to t' (t-r {X} {Y} {Γ :: σ} (act X wk₁ a , d'))))
-  t-r {X} {Y} {Γ}  (a , T-lookup (T-update0 (T-to {.Γ} {σ} t d)) (T-update1 (T-return d'))) = T-lookup (T-update0 (T-to t (t-r {X} {Y} {Γ :: σ} (act X wk₁ a , d)))) (T-update1 (T-return (a , d')))
-  t-r {X} {Y} {Γ}  (a , T-lookup (T-update0 (T-to {.Γ} {σ} t d)) (T-update1 (T-to {.Γ} {σ'} t' d'))) = T-lookup (T-update0 (T-to t (t-r {X} {Y} {Γ :: σ} (act X wk₁ a , d)))) (T-update1 (T-to t' (t-r {X} {Y} {Γ :: σ'} (act X wk₁ a , d'))))
+  strength-helper a (b , inl d) = b , (inl (a , d))
+  strength-helper {X} {Y} {Γ} a (b , inr (σ , (t , d))) = b , inr (σ , (t , strength {X} {Y} {Γ :: σ} (act X wk₁ a , d)))
 
-  t-r {X} {Y} {Γ}  (a , T-lookup (T-update1 (T-return d)) (T-update0 (T-return d'))) = T-lookup (T-update1 (T-return (a , d))) (T-update0 (T-return (a , d')))
-  t-r {X} {Y} {Γ}  (a , T-lookup (T-update1 (T-return d)) (T-update0 (T-to {.Γ} {σ} t' d'))) = T-lookup (T-update1 (T-return (a , d))) (T-update0 (T-to t' (t-r {X} {Y} {Γ :: σ} (act X wk₁ a , d'))))
-  t-r {X} {Y} {Γ}  (a , T-lookup (T-update1 (T-to {.Γ} {σ} t d)) (T-update0 (T-return d'))) = T-lookup (T-update1 (T-to t (t-r {X} {Y} {Γ :: σ} (act X wk₁ a , d)))) (T-update0 (T-return (a , d')))
-  t-r {X} {Y} {Γ}  (a , T-lookup (T-update1 (T-to {.Γ} {σ} t d)) (T-update0 (T-to {.Γ} {σ'} t' d'))) = T-lookup (T-update1 (T-to t (t-r {X} {Y} {Γ :: σ} (act X wk₁ a , d)))) (T-update0 (T-to t' (t-r {X} {Y} {Γ :: σ'} (act X wk₁ a , d'))))
+  strength {X} {Y} {Γ} (a , lfp d) = lfp (λ b → strength-helper {X} {Y} a (d b))
 
-  t-r {X} {Y} {Γ}  (a , T-lookup (T-update1 (T-return d)) (T-update1 (T-return d'))) = T-lookup (T-update1 (T-return (a , d))) (T-update1 (T-return (a , d')))
-  t-r {X} {Y} {Γ}  (a , T-lookup (T-update1 (T-return d)) (T-update1 (T-to {.Γ} {σ} t' d'))) = T-lookup (T-update1 (T-return (a , d))) (T-update1 (T-to t' (t-r {X} {Y} {Γ :: σ} (act X wk₁ a , d'))))
-  t-r {X} {Y} {Γ}  (a , T-lookup (T-update1 (T-to {.Γ} {σ} t d)) (T-update1 (T-return d'))) = T-lookup (T-update1 (T-to t (t-r {X} {Y} {Γ :: σ} (act X wk₁ a , d)))) (T-update1 (T-return (a , d')))
-  t-r {X} {Y} {Γ}  (a , T-lookup (T-update1 (T-to {.Γ} {σ} t d)) (T-update1 (T-to {.Γ} {σ'} t' d'))) = T-lookup (T-update1 (T-to t (t-r {X} {Y} {Γ :: σ} (act X wk₁ a , d)))) (T-update1 (T-to t' (t-r {X} {Y} {Γ :: σ'} (act X wk₁ a , d'))))
 
 
   -- Components of Kleisli exponentials
-  _⇒_ : (X Y : Ctx → Set) → Ctx → Set 
-  (X ⇒ Y) Γ = {Γ' : Ctx} → Ren Γ Γ' → X Γ' → T Y Γ'
+  _⇒T_ : (X Y : Ctx → Set) → Ctx → Set 
+  (X ⇒T Y) Γ = {Γ' : Ctx} → Ren Γ Γ' → X Γ' → T Y Γ'
 
 
   -- Algebraic operations for the residual monad (global state operations)
   Alg-lookup :  {X : Set^Ren} → (Set^Ren-Map ((T-Set^Ren X) ⊗ (T-Set^Ren X)) (T-Set^Ren X))
-  Alg-lookup (T-lookup (T-update0 a) (T-update0 a') , T-lookup (T-update0 b) (T-update0 b')) = T-lookup (T-update0 a) (T-update0 b')
-  Alg-lookup (T-lookup (T-update0 a) (T-update0 a') , T-lookup (T-update0 b) (T-update1 b')) = T-lookup (T-update0 a) (T-update1 b')
-  Alg-lookup (T-lookup (T-update0 a) (T-update0 a') , T-lookup (T-update1 b) (T-update0 b')) = T-lookup (T-update0 a) (T-update0 b')
-  Alg-lookup (T-lookup (T-update0 a) (T-update0 a') , T-lookup (T-update1 b) (T-update1 b')) = T-lookup (T-update0 a) (T-update1 b')
-  Alg-lookup (T-lookup (T-update0 a) (T-update1 a') , T-lookup (T-update0 b) (T-update0 b')) = T-lookup (T-update0 a) (T-update0 b')
-  Alg-lookup (T-lookup (T-update0 a) (T-update1 a') , T-lookup (T-update0 b) (T-update1 b')) = T-lookup (T-update0 a) (T-update1 b')
-  Alg-lookup (T-lookup (T-update0 a) (T-update1 a') , T-lookup (T-update1 b) (T-update0 b')) = T-lookup (T-update0 a) (T-update0 b')
-  Alg-lookup (T-lookup (T-update0 a) (T-update1 a') , T-lookup (T-update1 b) (T-update1 b')) = T-lookup (T-update0 a) (T-update1 b')
-  Alg-lookup (T-lookup (T-update1 a) (T-update0 a') , T-lookup (T-update0 b) (T-update0 b')) = T-lookup (T-update1 a) (T-update0 b')
-  Alg-lookup (T-lookup (T-update1 a) (T-update0 a') , T-lookup (T-update0 b) (T-update1 b')) = T-lookup (T-update1 a) (T-update1 b')
-  Alg-lookup (T-lookup (T-update1 a) (T-update0 a') , T-lookup (T-update1 b) (T-update0 b')) = T-lookup (T-update1 a) (T-update0 b')
-  Alg-lookup (T-lookup (T-update1 a) (T-update0 a') , T-lookup (T-update1 b) (T-update1 b')) = T-lookup (T-update1 a) (T-update1 b')
-  Alg-lookup (T-lookup (T-update1 a) (T-update1 a') , T-lookup (T-update0 b) (T-update0 b')) = T-lookup (T-update1 a) (T-update0 b')
-  Alg-lookup (T-lookup (T-update1 a) (T-update1 a') , T-lookup (T-update0 b) (T-update1 b')) = T-lookup (T-update1 a) (T-update1 b')
-  Alg-lookup (T-lookup (T-update1 a) (T-update1 a') , T-lookup (T-update1 b) (T-update0 b')) = T-lookup (T-update1 a) (T-update0 b')
-  Alg-lookup (T-lookup (T-update1 a) (T-update1 a') , T-lookup (T-update1 b) (T-update1 b')) = T-lookup (T-update1 a) (T-update1 b')
+  Alg-lookup (lfp d , lfp d') = lfp (λ {(inl b) → d (inl b) ; (inr b) → d' (inr b)})
 
   Alg-update0 :  {X : Set^Ren} → (Set^Ren-Map (T-Set^Ren X) (T-Set^Ren X))
-  Alg-update0 (T-lookup (T-update0 d) (T-update0 d')) = T-lookup (T-update0 d) (T-update0 d)
-  Alg-update0 (T-lookup (T-update0 d) (T-update1 d')) = T-lookup (T-update0 d) (T-update0 d)
-  Alg-update0 (T-lookup (T-update1 d) (T-update0 d')) = T-lookup (T-update0 d) (T-update0 d)
-  Alg-update0 (T-lookup (T-update1 d) (T-update1 d')) = T-lookup (T-update0 d) (T-update0 d)
+  Alg-update0 (lfp d) = lfp (λ b → d (inl ⋆))
 
   Alg-update1 :  {X : Set^Ren} → (Set^Ren-Map (T-Set^Ren X) (T-Set^Ren X))
-  Alg-update1 (T-lookup (T-update0 d) (T-update0 d')) = T-lookup (T-update1 d') (T-update1 d')
-  Alg-update1 (T-lookup (T-update0 d) (T-update1 d')) = T-lookup (T-update1 d') (T-update1 d')
-  Alg-update1 (T-lookup (T-update1 d) (T-update0 d')) = T-lookup (T-update1 d') (T-update1 d')
-  Alg-update1 (T-lookup (T-update1 d) (T-update1 d')) = T-lookup (T-update1 d') (T-update1 d')
+  Alg-update1 (lfp d) = lfp (λ b → d (inr ⋆))
 

@@ -65,8 +65,8 @@ module Presheaves where
   ⊢p-rename f (app t u) = app (⊢v-rename f t) (⊢v-rename f u)
   ⊢p-rename f (or t u) = or (⊢p-rename f t) (⊢p-rename f u)
   ⊢p-rename f (if b then t else u) = if (⊢v-rename f b) then (⊢p-rename f t) else (⊢p-rename f u)
-  ⊢p-rename f (input t) = input (⊢p-rename (wk₂ f) t)
-  ⊢p-rename f (output b t) = output (⊢v-rename f b) (⊢p-rename f t)
+  ⊢p-rename f (input[ t ]) = input[ (⊢p-rename (wk₂ f) t) ]
+  ⊢p-rename f (output[ b , t ]) = output[ (⊢v-rename f b) , (⊢p-rename f t) ]
 
 
   -- Identity renaming lemma for renaming value and producer terms
@@ -141,19 +141,19 @@ module Presheaves where
     ≅〈 cong (λ x → if x then t else u) (⊢v-rename-id-lem b) 〉
       if b then t else u
     ∎
-  ⊢p-rename-id-lem {Γ} (input t) = 
-      input (⊢p-rename (wk₂ id-ren) t)  
-    ≅〈 cong (λ (x : Ren (Γ :: bit) (Γ :: bit)) → input (⊢p-rename x t)) (iext (λ σ → ext (λ x → wk₂-id-lem x))) 〉
-      input (⊢p-rename id-ren t)
-    ≅〈 cong input (⊢p-rename-id-lem t) 〉
-      input t
+  ⊢p-rename-id-lem {Γ} (input[ t ]) = 
+      input[ (⊢p-rename (wk₂ id-ren) t) ] 
+    ≅〈 cong (λ (x : Ren (Γ :: bit) (Γ :: bit)) → input[ (⊢p-rename x t) ]) (iext (λ σ → ext (λ x → wk₂-id-lem x))) 〉
+      input[ (⊢p-rename id-ren t) ]
+    ≅〈 cong (λ x → input[ x ]) (⊢p-rename-id-lem t) 〉
+      input[ t ]
     ∎
-  ⊢p-rename-id-lem (output b t) = 
-      output (⊢v-rename id-ren b) (⊢p-rename id-ren t)
-    ≅〈 cong (λ x → output (⊢v-rename id-ren b) x) (⊢p-rename-id-lem t) 〉
-      output (⊢v-rename id-ren b) t
-    ≅〈 cong (λ x → output x t) (⊢v-rename-id-lem b) 〉
-      output b t
+  ⊢p-rename-id-lem (output[ b , t ]) = 
+      output[ (⊢v-rename id-ren b) , (⊢p-rename id-ren t) ]
+    ≅〈 cong (λ x → output[ (⊢v-rename id-ren b) , x ]) (⊢p-rename-id-lem t) 〉
+      output[ (⊢v-rename id-ren b) , t ]
+    ≅〈 cong (λ x → output[ x , t ]) (⊢v-rename-id-lem b) 〉
+      output[ b , t ]
     ∎
 
   -- Weakening of composition of renamings
@@ -249,19 +249,19 @@ module Presheaves where
     ≅〈 cong (λ x → if x then (⊢p-rename (comp-ren g f) t) else (⊢p-rename (comp-ren g f) u)) (⊢v-rename-comp-lem b) 〉
       if (⊢v-rename (comp-ren g f) b) then (⊢p-rename (comp-ren g f) t) else (⊢p-rename (comp-ren g f) u)
     ∎
-  ⊢p-rename-comp-lem {Γ} {Γ'} {Γ''} {σ} {f} {g} (input t) = 
-      input (⊢p-rename (wk₂ g) (⊢p-rename (wk₂ f) t))
-    ≅〈 cong input (⊢p-rename-comp-lem t) 〉
-      input (⊢p-rename (comp-ren (wk₂ g) (wk₂ f)) t)
-    ≅〈 cong (λ (x : Ren (Γ :: bit) (Γ'' :: bit)) → input (⊢p-rename x t)) (iext (λ σ → ext (λ x → wk₂-comp-lem x))) 〉
-      input (⊢p-rename (wk₂ (comp-ren g f)) t)
+  ⊢p-rename-comp-lem {Γ} {Γ'} {Γ''} {σ} {f} {g} (input[ t ]) = 
+      input[ (⊢p-rename (wk₂ g) (⊢p-rename (wk₂ f) t)) ]
+    ≅〈 cong (λ x → input[ x ]) (⊢p-rename-comp-lem t) 〉
+      input[ (⊢p-rename (comp-ren (wk₂ g) (wk₂ f)) t) ]
+    ≅〈 cong (λ (x : Ren (Γ :: bit) (Γ'' :: bit)) → input[ (⊢p-rename x t) ]) (iext (λ σ → ext (λ x → wk₂-comp-lem x))) 〉
+      input[ (⊢p-rename (wk₂ (comp-ren g f)) t) ]
     ∎
-  ⊢p-rename-comp-lem {Γ} {Γ'} {Γ''} {σ} {f} {g} (output b t) = 
-      output (⊢v-rename g (⊢v-rename f b)) (⊢p-rename g (⊢p-rename f t)) 
-    ≅〈 cong (λ x → output (⊢v-rename g (⊢v-rename f b)) x) (⊢p-rename-comp-lem t) 〉
-      output (⊢v-rename g (⊢v-rename f b)) (⊢p-rename (comp-ren g f) t) 
-    ≅〈 cong (λ x → output x (⊢p-rename (comp-ren g f) t)) (⊢v-rename-comp-lem b) 〉
-      output (⊢v-rename (comp-ren g f) b) (⊢p-rename (comp-ren g f) t) 
+  ⊢p-rename-comp-lem {Γ} {Γ'} {Γ''} {σ} {f} {g} (output[ b , t ]) = 
+      output[ (⊢v-rename g (⊢v-rename f b)) , (⊢p-rename g (⊢p-rename f t)) ]
+    ≅〈 cong (λ x → output[ (⊢v-rename g (⊢v-rename f b)) , x ]) (⊢p-rename-comp-lem t) 〉
+      output[ (⊢v-rename g (⊢v-rename f b)) , (⊢p-rename (comp-ren g f) t) ]
+    ≅〈 cong (λ x → output[ x , (⊢p-rename (comp-ren g f) t) ]) (⊢v-rename-comp-lem b) 〉
+      output[ (⊢v-rename (comp-ren g f) b) , (⊢p-rename (comp-ren g f) t) ]
     ∎
 
 
@@ -300,8 +300,8 @@ module Presheaves where
   ⊢np-rename f (toNP t u) = toNP (⊢ap-rename f t) (⊢np-rename (wk₂ f) u)
   ⊢np-rename f (orNP t u) = orNP (⊢np-rename f t) (⊢np-rename f u)
   ⊢np-rename f (ifNP b then t else u) = ifNP ⊢nv-rename f b then ⊢np-rename f t else (⊢np-rename f u)
-  ⊢np-rename f (inputNP t) = inputNP (⊢np-rename (wk₂ f) t)
-  ⊢np-rename f (outputNP b t) = outputNP (⊢nv-rename f b) (⊢np-rename f t)
+  ⊢np-rename f (inputNP[ t ]) = inputNP[ (⊢np-rename (wk₂ f) t) ]
+  ⊢np-rename f (outputNP[ b , t ]) = outputNP[ (⊢nv-rename f b) , (⊢np-rename f t) ]
   ⊢ap-rename f (appAP t u) = appAP (⊢av-rename f t) (⊢nv-rename f u)
 
 
@@ -389,19 +389,19 @@ module Presheaves where
     ≅〈 cong (λ x → ifNP x then t else u) (⊢nv-rename-id-lem b) 〉
       ifNP b then t else u 
     ∎
-  ⊢np-rename-id-lem {Γ} (inputNP t) = 
-      inputNP (⊢np-rename (wk₂ id-ren) t)  
-    ≅〈 cong (λ (x : Ren (Γ :: bit) (Γ :: bit)) → inputNP (⊢np-rename x t)) (iext (λ σ → ext (λ x → wk₂-id-lem x))) 〉
-      inputNP (⊢np-rename id-ren t)
-    ≅〈 cong inputNP (⊢np-rename-id-lem t) 〉
-      inputNP t
+  ⊢np-rename-id-lem {Γ} (inputNP[ t ]) = 
+      inputNP[ (⊢np-rename (wk₂ id-ren) t) ]
+    ≅〈 cong (λ (x : Ren (Γ :: bit) (Γ :: bit)) → inputNP[ (⊢np-rename x t) ]) (iext (λ σ → ext (λ x → wk₂-id-lem x))) 〉
+      inputNP[ (⊢np-rename id-ren t) ]
+    ≅〈 cong (λ x → inputNP[ x ]) (⊢np-rename-id-lem t) 〉
+      inputNP[ t ]
     ∎
-  ⊢np-rename-id-lem (outputNP b t) = 
-      outputNP (⊢nv-rename id-ren b) (⊢np-rename id-ren t)
-    ≅〈 cong (λ x → outputNP (⊢nv-rename id-ren b) x) (⊢np-rename-id-lem t) 〉
-      outputNP (⊢nv-rename id-ren b) t
-    ≅〈 cong (λ x → outputNP x t) (⊢nv-rename-id-lem b) 〉
-      outputNP b t 
+  ⊢np-rename-id-lem (outputNP[ b , t ]) = 
+      outputNP[ (⊢nv-rename id-ren b) , (⊢np-rename id-ren t) ]
+    ≅〈 cong (λ x → outputNP[ (⊢nv-rename id-ren b) , x ]) (⊢np-rename-id-lem t) 〉
+      outputNP[ (⊢nv-rename id-ren b) , t ]
+    ≅〈 cong (λ x → outputNP[ x , t ]) (⊢nv-rename-id-lem b) 〉
+      outputNP[ b , t ] 
     ∎
   ⊢ap-rename-id-lem (appAP t u) = 
       appAP (⊢av-rename id-ren t) (⊢nv-rename id-ren u)
@@ -502,19 +502,19 @@ module Presheaves where
     ≅〈 cong (λ x → ifNP x then (⊢np-rename (comp-ren g f) t) else (⊢np-rename (comp-ren g f) u)) (⊢nv-rename-comp-lem b) 〉
       ifNP (⊢nv-rename (comp-ren g f) b) then (⊢np-rename (comp-ren g f) t) else (⊢np-rename (comp-ren g f) u)
     ∎
-  ⊢np-rename-comp-lem {Γ} {Γ'} {Γ''} {σ} {f} {g} (inputNP t) = 
-      inputNP (⊢np-rename (wk₂ g) (⊢np-rename (wk₂ f) t))
-    ≅〈 cong inputNP (⊢np-rename-comp-lem t) 〉
-      inputNP (⊢np-rename (comp-ren (wk₂ g) (wk₂ f)) t)
-    ≅〈 cong (λ (x : Ren (Γ :: bit) (Γ'' :: bit)) → inputNP (⊢np-rename x t)) (iext (λ σ → ext (λ x → wk₂-comp-lem x))) 〉
-      inputNP (⊢np-rename (wk₂ (comp-ren g f)) t)
+  ⊢np-rename-comp-lem {Γ} {Γ'} {Γ''} {σ} {f} {g} (inputNP[ t ]) = 
+      inputNP[ (⊢np-rename (wk₂ g) (⊢np-rename (wk₂ f) t)) ]
+    ≅〈 cong (λ x → inputNP[ x ]) (⊢np-rename-comp-lem t) 〉
+      inputNP[ (⊢np-rename (comp-ren (wk₂ g) (wk₂ f)) t) ]
+    ≅〈 cong (λ (x : Ren (Γ :: bit) (Γ'' :: bit)) → inputNP[ (⊢np-rename x t) ]) (iext (λ σ → ext (λ x → wk₂-comp-lem x))) 〉
+      inputNP[ (⊢np-rename (wk₂ (comp-ren g f)) t) ]
     ∎
-  ⊢np-rename-comp-lem {Γ} {Γ'} {Γ''} {σ} {f} {g} (outputNP b t) = 
-      outputNP (⊢nv-rename g (⊢nv-rename f b)) (⊢np-rename g (⊢np-rename f t))
-    ≅〈 cong (λ x → outputNP (⊢nv-rename g (⊢nv-rename f b)) x) (⊢np-rename-comp-lem t) 〉
-      outputNP (⊢nv-rename g (⊢nv-rename f b)) (⊢np-rename (comp-ren g f) t)
-    ≅〈 cong (λ x → outputNP x (⊢np-rename (comp-ren g f) t)) (⊢nv-rename-comp-lem b) 〉
-      outputNP (⊢nv-rename (comp-ren g f) b) (⊢np-rename (comp-ren g f) t)
+  ⊢np-rename-comp-lem {Γ} {Γ'} {Γ''} {σ} {f} {g} (outputNP[ b , t ]) = 
+      outputNP[ (⊢nv-rename g (⊢nv-rename f b)) , (⊢np-rename g (⊢np-rename f t)) ]
+    ≅〈 cong (λ x → outputNP[ (⊢nv-rename g (⊢nv-rename f b)) , x ]) (⊢np-rename-comp-lem t) 〉
+      outputNP[ (⊢nv-rename g (⊢nv-rename f b)) , (⊢np-rename (comp-ren g f) t) ]
+    ≅〈 cong (λ x → outputNP[ x , (⊢np-rename (comp-ren g f) t) ]) (⊢nv-rename-comp-lem b) 〉
+      outputNP[ (⊢nv-rename (comp-ren g f) b) , (⊢np-rename (comp-ren g f) t) ]
     ∎
   ⊢ap-rename-comp-lem {Γ} {Γ'} {Γ''} {σ} {f} {g} (appAP t u) = 
       appAP (⊢av-rename g (⊢av-rename f t)) (⊢nv-rename g (⊢nv-rename f u))
@@ -573,8 +573,8 @@ module Presheaves where
   ⊢np-embed (toNP t u) = ⊢ap-embed t to ⊢np-embed u
   ⊢np-embed (orNP t u) = or (⊢np-embed t) (⊢np-embed u)
   ⊢np-embed (ifNP b then t else u) = if (⊢nv-embed b) then (⊢np-embed t) else (⊢np-embed u)
-  ⊢np-embed (inputNP t) = input (⊢np-embed t)
-  ⊢np-embed (outputNP b t) = output (⊢nv-embed b) (⊢np-embed t)
+  ⊢np-embed (inputNP[ t ]) = input[ (⊢np-embed t) ]
+  ⊢np-embed (outputNP[ b , t ]) = output[ (⊢nv-embed b) , (⊢np-embed t) ]
   ⊢ap-embed (appAP t u) = app (⊢av-embed t) (⊢nv-embed u)
 
 

@@ -61,9 +61,9 @@ module Presheaves where
   ⊢p-rename f (return t) = return (⊢v-rename f t)
   ⊢p-rename f (t to u) = ⊢p-rename f t to ⊢p-rename (wk₂ f) u
   ⊢p-rename f (app t u) = app (⊢v-rename f t) (⊢v-rename f u)
-  ⊢p-rename f (input t u) = input (⊢p-rename f t) (⊢p-rename f u)
-  ⊢p-rename f (output0 t) = output0 (⊢p-rename f t)
-  ⊢p-rename f (output1 t) = output1 (⊢p-rename f t)
+  ⊢p-rename f (input[ t , u ]) = input[ ⊢p-rename f t , ⊢p-rename f u ]
+  ⊢p-rename f (output0[ t ]) = output0[ ⊢p-rename f t ]
+  ⊢p-rename f (output1[ t ]) = output1[ ⊢p-rename f t ]
 
 
   -- Identity renaming lemma for renaming value and producer terms
@@ -120,20 +120,20 @@ module Presheaves where
     ≅〈 cong2 app (⊢v-rename-id-lem t) (⊢v-rename-id-lem u) 〉 
       app t u 
     ∎
-  ⊢p-rename-id-lem (input t u) = 
-      input (⊢p-rename id-ren t) (⊢p-rename id-ren u) 
-    ≅〈 cong2 input (⊢p-rename-id-lem t) (⊢p-rename-id-lem u) 〉
-      input t u 
+  ⊢p-rename-id-lem (input[ t , u ]) = 
+      input[(⊢p-rename id-ren t) , (⊢p-rename id-ren u) ]
+    ≅〈 cong2 (λ x y → input[ x , y ]) (⊢p-rename-id-lem t) (⊢p-rename-id-lem u) 〉
+      input[ t , u ] 
     ∎
-  ⊢p-rename-id-lem (output0 t) = 
-      output0 (⊢p-rename id-ren t) 
-    ≅〈 cong output0 (⊢p-rename-id-lem t) 〉
-      output0 t 
+  ⊢p-rename-id-lem (output0[ t ])  = 
+      output0[ (⊢p-rename id-ren t) ]
+    ≅〈 cong (λ x → output0[ x ]) (⊢p-rename-id-lem t) 〉
+      output0[ t ]
     ∎
-  ⊢p-rename-id-lem (output1 t) = 
-      output1 (⊢p-rename id-ren t) 
-    ≅〈 cong output1 (⊢p-rename-id-lem t) 〉
-      output1 t 
+  ⊢p-rename-id-lem (output1[ t ]) = 
+      output1[ (⊢p-rename id-ren t) ] 
+    ≅〈 cong (λ x → output1[ x ]) (⊢p-rename-id-lem t) 〉
+      output1[ t ] 
     ∎
 
 
@@ -212,20 +212,20 @@ module Presheaves where
     ≅〈 cong2 app (⊢v-rename-comp-lem t) (⊢v-rename-comp-lem u) 〉
       app (⊢v-rename (comp-ren g f) t) (⊢v-rename (comp-ren g f) u)
     ∎
-  ⊢p-rename-comp-lem {Γ} {Γ'} {Γ''} {σ} {f} {g} (input t u) = 
-      input (⊢p-rename g (⊢p-rename f t)) (⊢p-rename g (⊢p-rename f u))
-    ≅〈 cong2 input (⊢p-rename-comp-lem t) (⊢p-rename-comp-lem u) 〉
-      input (⊢p-rename (comp-ren g f) t) (⊢p-rename (comp-ren g f) u)
+  ⊢p-rename-comp-lem {Γ} {Γ'} {Γ''} {σ} {f} {g} (input[ t , u ]) = 
+      input[ (⊢p-rename g (⊢p-rename f t)) , (⊢p-rename g (⊢p-rename f u)) ]
+    ≅〈 cong2 (λ x y → input[ x , y ]) (⊢p-rename-comp-lem t) (⊢p-rename-comp-lem u) 〉
+      input[ (⊢p-rename (comp-ren g f) t) , (⊢p-rename (comp-ren g f) u) ]
     ∎
-  ⊢p-rename-comp-lem {Γ} {Γ'} {Γ''} {σ} {f} {g} (output0 t) = 
-      output0 (⊢p-rename g (⊢p-rename f t))
-    ≅〈 cong output0 (⊢p-rename-comp-lem t) 〉
-      output0 (⊢p-rename (comp-ren g f) t)
+  ⊢p-rename-comp-lem {Γ} {Γ'} {Γ''} {σ} {f} {g} (output0[ t ]) = 
+      output0[ (⊢p-rename g (⊢p-rename f t)) ]
+    ≅〈 cong (λ x → output0[ x ]) (⊢p-rename-comp-lem t) 〉
+      output0[ (⊢p-rename (comp-ren g f) t) ]
     ∎
-  ⊢p-rename-comp-lem {Γ} {Γ'} {Γ''} {σ} {f} {g} (output1 t) = 
-      output1 (⊢p-rename g (⊢p-rename f t))
-    ≅〈 cong output1 (⊢p-rename-comp-lem t) 〉
-      output1 (⊢p-rename (comp-ren g f) t)
+  ⊢p-rename-comp-lem {Γ} {Γ'} {Γ''} {σ} {f} {g} (output1[ t ]) = 
+      output1[ (⊢p-rename g (⊢p-rename f t)) ]
+    ≅〈 cong (λ x → output1[ x ]) (⊢p-rename-comp-lem t) 〉
+      output1[ (⊢p-rename (comp-ren g f) t) ]
     ∎
 
 
@@ -259,9 +259,9 @@ module Presheaves where
   ⊢av-rename f (proj₂AV t) = proj₂AV (⊢av-rename f t)
   ⊢np-rename f (returnNP t) = returnNP (⊢nv-rename f t)
   ⊢np-rename f (toNP t u) = toNP (⊢ap-rename f t) (⊢np-rename (wk₂ f) u)
-  ⊢np-rename f (inputNP t u) = inputNP (⊢np-rename f t) (⊢np-rename f u)
-  ⊢np-rename f (output0NP t) = output0NP (⊢np-rename f t)
-  ⊢np-rename f (output1NP t) = output1NP (⊢np-rename f t)
+  ⊢np-rename f (inputNP[ t , u ]) = inputNP[ (⊢np-rename f t) , (⊢np-rename f u) ]
+  ⊢np-rename f (output0NP[ t ]) = output0NP[ (⊢np-rename f t) ]
+  ⊢np-rename f (output1NP[ t ]) = output1NP[ (⊢np-rename f t) ]
   ⊢ap-rename f (appAP t u) = appAP (⊢av-rename f t) (⊢nv-rename f u)
 
 
@@ -326,20 +326,20 @@ module Presheaves where
     ≅〈 cong2 toNP (⊢ap-rename-id-lem t) (trans (cong2 ⊢np-rename (iext (λ σ' → ext (λ x → wk₂-id-lem x))) refl) (⊢np-rename-id-lem u)) 〉
       toNP t u 
     ∎
-  ⊢np-rename-id-lem (inputNP t u) = 
-      inputNP (⊢np-rename id-ren t) (⊢np-rename id-ren u)
-    ≅〈 cong2 inputNP (⊢np-rename-id-lem t) (⊢np-rename-id-lem u) 〉
-      inputNP t u 
+  ⊢np-rename-id-lem (inputNP[ t , u ]) = 
+      inputNP[ (⊢np-rename id-ren t) , (⊢np-rename id-ren u) ]
+    ≅〈 cong2 (λ x y → inputNP[ x , y ]) (⊢np-rename-id-lem t) (⊢np-rename-id-lem u) 〉
+      inputNP[ t , u ] 
     ∎
-  ⊢np-rename-id-lem (output0NP t) = 
-      output0NP (⊢np-rename id-ren t) 
-    ≅〈 cong output0NP (⊢np-rename-id-lem t) 〉
-      output0NP t 
+  ⊢np-rename-id-lem (output0NP[ t ]) = 
+      output0NP[ (⊢np-rename id-ren t) ]
+    ≅〈 cong (λ x → output0NP[ x ]) (⊢np-rename-id-lem t) 〉
+      output0NP[ t ]
     ∎
-  ⊢np-rename-id-lem (output1NP t) = 
-      output1NP (⊢np-rename id-ren t) 
-    ≅〈 cong output1NP (⊢np-rename-id-lem t) 〉
-      output1NP t 
+  ⊢np-rename-id-lem (output1NP[ t ]) = 
+      output1NP[ (⊢np-rename id-ren t) ]
+    ≅〈 cong (λ x → output1NP[ x ]) (⊢np-rename-id-lem t) 〉
+      output1NP[ t ] 
     ∎
   ⊢ap-rename-id-lem (appAP t u) = 
       appAP (⊢av-rename id-ren t) (⊢nv-rename id-ren u)
@@ -417,20 +417,20 @@ module Presheaves where
     ≅〈 cong2 toNP (⊢ap-rename-comp-lem t) (trans (⊢np-rename-comp-lem u) ((cong (λ (x : Ren _ _) → ⊢np-rename x u) (iext (λ σ → ext (λ x → (sym (rename-wk₂-comp-lem x)))))))) 〉
       toNP (⊢ap-rename (comp-ren g f) t) (⊢np-rename (wk₂ (comp-ren g f)) u)
     ∎
-  ⊢np-rename-comp-lem {Γ} {Γ'} {Γ''} {σ} {f} {g} (inputNP t u) = 
-      inputNP (⊢np-rename g (⊢np-rename f t)) (⊢np-rename g (⊢np-rename f u))
-    ≅〈 cong2 inputNP (⊢np-rename-comp-lem t) (⊢np-rename-comp-lem u) 〉
-      inputNP (⊢np-rename (comp-ren g f) t) (⊢np-rename (comp-ren g f) u)
+  ⊢np-rename-comp-lem {Γ} {Γ'} {Γ''} {σ} {f} {g} (inputNP[ t , u ]) = 
+      inputNP[ (⊢np-rename g (⊢np-rename f t)) , (⊢np-rename g (⊢np-rename f u)) ]
+    ≅〈 cong2 (λ x y → inputNP[ x , y ]) (⊢np-rename-comp-lem t) (⊢np-rename-comp-lem u) 〉
+      inputNP[ (⊢np-rename (comp-ren g f) t) , (⊢np-rename (comp-ren g f) u) ]
     ∎
-  ⊢np-rename-comp-lem {Γ} {Γ'} {Γ''} {σ} {f} {g} (output0NP t) = 
-      output0NP (⊢np-rename g (⊢np-rename f t))
-    ≅〈 cong output0NP (⊢np-rename-comp-lem t) 〉
-      output0NP (⊢np-rename (comp-ren g f) t)
+  ⊢np-rename-comp-lem {Γ} {Γ'} {Γ''} {σ} {f} {g} (output0NP[ t ]) = 
+      output0NP[ (⊢np-rename g (⊢np-rename f t)) ]
+    ≅〈 cong (λ x → output0NP[ x ]) (⊢np-rename-comp-lem t) 〉
+      output0NP[ (⊢np-rename (comp-ren g f) t) ]
     ∎
-  ⊢np-rename-comp-lem {Γ} {Γ'} {Γ''} {σ} {f} {g} (output1NP t) = 
-      output1NP (⊢np-rename g (⊢np-rename f t))
-    ≅〈 cong output1NP (⊢np-rename-comp-lem t) 〉
-      output1NP (⊢np-rename (comp-ren g f) t)
+  ⊢np-rename-comp-lem {Γ} {Γ'} {Γ''} {σ} {f} {g} (output1NP[ t ]) = 
+      output1NP[ (⊢np-rename g (⊢np-rename f t)) ]
+    ≅〈 cong (λ x → output1NP[ x ]) (⊢np-rename-comp-lem t) 〉
+      output1NP[ (⊢np-rename (comp-ren g f) t) ]
     ∎
 
   ⊢ap-rename-comp-lem {Γ} {Γ'} {Γ''} {σ} {f} {g} (appAP t u) = 
@@ -485,9 +485,9 @@ module Presheaves where
   ⊢av-embed (proj₂AV t) = proj₂ (⊢av-embed t)
   ⊢np-embed (returnNP t) = return (⊢nv-embed t)
   ⊢np-embed (toNP t u) = ⊢ap-embed t to ⊢np-embed u
-  ⊢np-embed (inputNP t u) = input (⊢np-embed t) (⊢np-embed u)
-  ⊢np-embed (output0NP t) = output0 (⊢np-embed t)
-  ⊢np-embed (output1NP t) = output1 (⊢np-embed t)
+  ⊢np-embed (inputNP[ t , u ]) = input[ (⊢np-embed t) , (⊢np-embed u) ]
+  ⊢np-embed (output0NP[ t ]) = output0[ (⊢np-embed t) ]
+  ⊢np-embed (output1NP[ t ]) = output1[ (⊢np-embed t) ]
   ⊢ap-embed (appAP t u) = app (⊢av-embed t) (⊢nv-embed u)
 
 

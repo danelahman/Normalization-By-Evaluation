@@ -106,20 +106,20 @@ module Lemmas where
     ≡p〈 congto (⊢ap-embed-naturality t) (⊢np-embed-naturality u) 〉
       ⊢ap-embed (⊢ap-rename _ t) to ⊢np-embed (⊢np-rename (wk₂ _) u) 
     p∎
-  ⊢np-embed-naturality (inputNP t u) = 
-      input (⊢p-rename _ (⊢np-embed t)) (⊢p-rename _ (⊢np-embed u))
+  ⊢np-embed-naturality (inputNP[ t , u ]) = 
+      input[ (⊢p-rename _ (⊢np-embed t)) , (⊢p-rename _ (⊢np-embed u)) ]
     ≡p〈 conginput (⊢np-embed-naturality t) (⊢np-embed-naturality u) 〉
-      input (⊢np-embed (⊢np-rename _ t)) (⊢np-embed (⊢np-rename _ u)) 
+      input[ (⊢np-embed (⊢np-rename _ t)) , (⊢np-embed (⊢np-rename _ u)) ]
     p∎
-  ⊢np-embed-naturality (output0NP t) = 
-      output0 (⊢p-rename _ (⊢np-embed t))
+  ⊢np-embed-naturality (output0NP[ t ]) = 
+      output0[ (⊢p-rename _ (⊢np-embed t)) ]
     ≡p〈 congoutput0 (⊢np-embed-naturality t) 〉
-      output0 (⊢np-embed (⊢np-rename _ t)) 
+      output0[ (⊢np-embed (⊢np-rename _ t)) ]
     p∎
-  ⊢np-embed-naturality (output1NP t) = 
-      output1 (⊢p-rename _ (⊢np-embed t))
+  ⊢np-embed-naturality (output1NP[ t ]) = 
+      output1[ (⊢p-rename _ (⊢np-embed t)) ]
     ≡p〈 congoutput1 (⊢np-embed-naturality t) 〉
-      output1 (⊢np-embed (⊢np-rename _ t)) 
+      output1[ (⊢np-embed (⊢np-rename _ t)) ]
     p∎
 
   ⊢ap-embed-naturality (appAP t u) = 
@@ -225,20 +225,20 @@ module Lemmas where
     ≅〈 cong2 app (rename-subst-lem-v t) (rename-subst-lem-v u) 〉
       app (subst-v (subst-comp-ren f s) t) (subst-v (subst-comp-ren f s) u)
     ∎
-  rename-subst-lem-p {Γ} {Γ'} {Γ''} {σ} {s} {f} (input t u) = 
-      input (⊢p-rename f (subst-p s t)) (⊢p-rename f (subst-p s u))
-    ≅〈 cong2 input (rename-subst-lem-p t) (rename-subst-lem-p u) 〉
-      input (subst-p (subst-comp-ren f s) t) (subst-p (subst-comp-ren f s) u)
+  rename-subst-lem-p {Γ} {Γ'} {Γ''} {σ} {s} {f} (input[ t , u ]) = 
+      input[ (⊢p-rename f (subst-p s t)) , (⊢p-rename f (subst-p s u)) ]
+    ≅〈 cong2 (λ x y → input[ x , y ]) (rename-subst-lem-p t) (rename-subst-lem-p u) 〉
+      input[ (subst-p (subst-comp-ren f s) t) , (subst-p (subst-comp-ren f s) u) ]
     ∎
-  rename-subst-lem-p {Γ} {Γ'} {Γ''} {σ} {s} {f} (output0 t) = 
-      output0 (⊢p-rename f (subst-p s t))
-    ≅〈 cong output0 (rename-subst-lem-p t) 〉
-      output0 (subst-p (subst-comp-ren f s) t)
+  rename-subst-lem-p {Γ} {Γ'} {Γ''} {σ} {s} {f} (output0[ t ]) = 
+      output0[ (⊢p-rename f (subst-p s t)) ]
+    ≅〈 cong (λ x → output0[ x ]) (rename-subst-lem-p t) 〉
+      output0[ (subst-p (subst-comp-ren f s) t) ]
     ∎
-  rename-subst-lem-p {Γ} {Γ'} {Γ''} {σ} {s} {f} (output1 t) = 
-      output1 (⊢p-rename f (subst-p s t))
-    ≅〈 cong output1 (rename-subst-lem-p t) 〉
-      output1 (subst-p (subst-comp-ren f s) t)
+  rename-subst-lem-p {Γ} {Γ'} {Γ''} {σ} {s} {f} (output1[ t ]) = 
+      output1[ (⊢p-rename f (subst-p s t)) ]
+    ≅〈 cong (λ x → output1[ x ]) (rename-subst-lem-p t) 〉
+      output1[ (subst-p (subst-comp-ren f s) t) ]
     ∎
 
 
@@ -300,20 +300,20 @@ module Lemmas where
     ≅〈 cong2 app (subst-rename-lem-v t) (subst-rename-lem-v u) 〉
       app (subst-v (λ {σ'} → f · s) t) (subst-v (λ {σ'} → f · s) u)
     ∎
-  subst-rename-lem-p {Γ} {Γ'} {Γ''} {σ} {s} {f} (input t u) = 
-      input (subst-p f (⊢p-rename s t)) (subst-p f (⊢p-rename s u))
-    ≅〈 cong2 input (subst-rename-lem-p t) (subst-rename-lem-p u) 〉
-      input (subst-p (λ {σ'} → f · s) t) (subst-p (λ {σ'} → f · s) u)
+  subst-rename-lem-p {Γ} {Γ'} {Γ''} {σ} {s} {f} (input[ t , u ]) = 
+      input[ (subst-p f (⊢p-rename s t)) , (subst-p f (⊢p-rename s u)) ]
+    ≅〈 cong2 (λ x y → input[ x , y ]) (subst-rename-lem-p t) (subst-rename-lem-p u) 〉
+      input[ (subst-p (λ {σ'} → f · s) t) , (subst-p (λ {σ'} → f · s) u) ]
     ∎
-  subst-rename-lem-p {Γ} {Γ'} {Γ''} {σ} {s} {f} (output0 t) = 
-      output0 (subst-p f (⊢p-rename s t))
-    ≅〈 cong output0 (subst-rename-lem-p t) 〉
-      output0 (subst-p (λ {σ'} → f · s) t)
+  subst-rename-lem-p {Γ} {Γ'} {Γ''} {σ} {s} {f} (output0[ t ]) = 
+      output0[ (subst-p f (⊢p-rename s t)) ]
+    ≅〈 cong (λ x → output0[ x ]) (subst-rename-lem-p t) 〉
+      output0[ (subst-p (λ {σ'} → f · s) t) ]
     ∎
-  subst-rename-lem-p {Γ} {Γ'} {Γ''} {σ} {s} {f} (output1 t) = 
-      output1 (subst-p f (⊢p-rename s t))
-    ≅〈 cong output1 (subst-rename-lem-p t) 〉
-      output1 (subst-p (λ {σ'} → f · s) t)
+  subst-rename-lem-p {Γ} {Γ'} {Γ''} {σ} {s} {f} (output1[ t ]) = 
+      output1[ (subst-p f (⊢p-rename s t)) ]
+    ≅〈 cong (λ x → output1[ x ]) (subst-rename-lem-p t) 〉
+      output1[ (subst-p (λ {σ'} → f · s) t) ]
     ∎
 
 
@@ -396,20 +396,20 @@ module Lemmas where
     ≅〈 cong2 app (subst-comp-lem-v t) (subst-comp-lem-v u) 〉
       app (subst-v (comp-subst s' s) t) (subst-v (comp-subst s' s) u)
     ∎
-  subst-comp-lem-p {Γ} {Γ'} {Γ''} {σ} {s} {s'} (input t u) = 
-      input (subst-p s' (subst-p s t)) (subst-p s' (subst-p s u))
-    ≅〈 cong2 input (subst-comp-lem-p t) (subst-comp-lem-p u) 〉
-      input (subst-p (comp-subst s' s) t) (subst-p (comp-subst s' s) u)
+  subst-comp-lem-p {Γ} {Γ'} {Γ''} {σ} {s} {s'} (input[ t , u ]) = 
+      input[ (subst-p s' (subst-p s t)) , (subst-p s' (subst-p s u)) ]
+    ≅〈 cong2 (λ x y → input[ x , y ]) (subst-comp-lem-p t) (subst-comp-lem-p u) 〉
+      input[ (subst-p (comp-subst s' s) t) , (subst-p (comp-subst s' s) u) ]
     ∎
-  subst-comp-lem-p {Γ} {Γ'} {Γ''} {σ} {s} {s'} (output0 t) = 
-      output0 (subst-p s' (subst-p s t))
-    ≅〈 cong output0 (subst-comp-lem-p t) 〉
-      output0 (subst-p (comp-subst s' s) t)
+  subst-comp-lem-p {Γ} {Γ'} {Γ''} {σ} {s} {s'} (output0[ t ]) = 
+      output0[ (subst-p s' (subst-p s t)) ]
+    ≅〈 cong (λ x → output0[ x ]) (subst-comp-lem-p t) 〉
+      output0[ (subst-p (comp-subst s' s) t) ]
     ∎
-  subst-comp-lem-p {Γ} {Γ'} {Γ''} {σ} {s} {s'} (output1 t) = 
-      output1 (subst-p s' (subst-p s t))
-    ≅〈 cong output1 (subst-comp-lem-p t) 〉
-      output1 (subst-p (comp-subst s' s) t)
+  subst-comp-lem-p {Γ} {Γ'} {Γ''} {σ} {s} {s'} (output1[ t ]) = 
+      output1[ (subst-p s' (subst-p s t)) ]
+    ≅〈 cong (λ x → output1[ x ]) (subst-comp-lem-p t) 〉
+      output1[ (subst-p (comp-subst s' s) t) ]
     ∎
 
 
@@ -633,20 +633,20 @@ module Lemmas where
     ≡p〈 congreturn (≡-substcong-v p) 〉
       return (subst-v s u)
     p∎
-  ≡-substcong-p {Γ} {Γ'} {σ} {s} {input t u} {input t' u'} (conginput p q) = 
-      input (subst-p s t) (subst-p s u)
+  ≡-substcong-p {Γ} {Γ'} {σ} {s} {input[ t , u ]} {input[ t' , u' ]} (conginput p q) = 
+      input[ (subst-p s t) , (subst-p s u) ]
     ≡p〈 conginput (≡-substcong-p p) (≡-substcong-p q) 〉
-      input (subst-p s t') (subst-p s u')
+      input[ (subst-p s t') , (subst-p s u') ]
     p∎
-  ≡-substcong-p {Γ} {Γ'} {σ} {s} {output0 t} {output0 t'} (congoutput0 p) = 
-      output0 (subst-p s t)
+  ≡-substcong-p {Γ} {Γ'} {σ} {s} {output0[ t ]} {output0[ t' ]} (congoutput0 p) = 
+      output0[ (subst-p s t) ]
     ≡p〈 congoutput0 (≡-substcong-p p) 〉
-      output0 (subst-p s t')
+      output0[ (subst-p s t') ]
     p∎
-  ≡-substcong-p {Γ} {Γ'} {σ} {s} {output1 t} {output1 t'} (congoutput1 p) = 
-      output1 (subst-p s t)
+  ≡-substcong-p {Γ} {Γ'} {σ} {s} {output1[ t ]} {output1[ t' ]} (congoutput1 p) = 
+      output1[ (subst-p s t) ]
     ≡p〈 congoutput1 (≡-substcong-p p) 〉
-      output1 (subst-p s t')
+      output1[ (subst-p s t') ]
     p∎
   ≡-substcong-p {Γ} {Γ'} {σ} {s} (β⇀ {.Γ} {σ'} {.σ} {t} {u}) = 
       subst-p s (subst-p (ext-subst var u) t) 
@@ -675,19 +675,19 @@ module Lemmas where
       subst-p f t to (subst-p (lift f) u to subst-p (lift (lift f)) (⊢p-rename exchange (⊢p-rename wk₁ v)))
     p∎
   ≡-substcong-p {Γ} {Γ'} {σ} {s} (inputto {.Γ} {σ'} {.σ} {t} {u} {v}) = 
-      input (subst-p s t) (subst-p s u) to subst-p (lift s) v
+      input[ (subst-p s t) , (subst-p s u) ] to subst-p (lift s) v
     ≡p〈 inputto 〉
-      input (subst-p s t to subst-p (lift s) v) (subst-p s u to subst-p (lift s) v)
+      input[ (subst-p s t to subst-p (lift s) v) , (subst-p s u to subst-p (lift s) v) ]
     p∎
   ≡-substcong-p {Γ} {Γ'} {σ} {s} (output0to {.Γ} {σ'} {.σ} {t} {u}) = 
-      output0 (subst-p s t) to subst-p (lift s) u
+      output0[ (subst-p s t) ] to subst-p (lift s) u
     ≡p〈 output0to 〉
-      output0 (subst-p s t to subst-p (lift s) u)
+      output0[ (subst-p s t to subst-p (lift s) u) ]
     p∎
   ≡-substcong-p {Γ} {Γ'} {σ} {s} (output1to {.Γ} {σ'} {.σ} {t} {u}) = 
-      output1 (subst-p s t) to subst-p (lift s) u
+      output1[ (subst-p s t) ] to subst-p (lift s) u
     ≡p〈 output1to 〉
-      output1 (subst-p s t to subst-p (lift s) u)
+      output1[ (subst-p s t to subst-p (lift s) u) ]
     p∎
 
 
@@ -833,20 +833,20 @@ module Lemmas where
     ≡p〈 congreturn (≡-renamecong-v p) 〉
       return (⊢v-rename f u)
     p∎
-  ≡-renamecong-p {Γ} {Γ'} {σ} {f} {input t u} {input t' u'} (conginput p q) = 
-      input (⊢p-rename f t) (⊢p-rename f u)
+  ≡-renamecong-p {Γ} {Γ'} {σ} {f} {input[ t , u ]} {input[ t' , u' ]} (conginput p q) = 
+      input[ (⊢p-rename f t) , (⊢p-rename f u) ]
     ≡p〈 conginput (≡-renamecong-p p) (≡-renamecong-p q) 〉
-      input (⊢p-rename f t') (⊢p-rename f u')
+      input[ (⊢p-rename f t') , (⊢p-rename f u') ]
     p∎
-  ≡-renamecong-p {Γ} {Γ'} {σ} {f} {output0 t} {output0 t'} (congoutput0 p) = 
-      output0 (⊢p-rename f t)
+  ≡-renamecong-p {Γ} {Γ'} {σ} {f} {output0[ t ]} {output0[ t' ]} (congoutput0 p) = 
+      output0[ (⊢p-rename f t) ]
     ≡p〈 congoutput0 (≡-renamecong-p p) 〉
-      output0 (⊢p-rename f t')
+      output0[ (⊢p-rename f t') ]
     p∎
-  ≡-renamecong-p {Γ} {Γ'} {σ} {f} {output1 t} {output1 t'} (congoutput1 p) = 
-      output1 (⊢p-rename f t)
+  ≡-renamecong-p {Γ} {Γ'} {σ} {f} {output1[ t ]} {output1[ t' ]} (congoutput1 p) = 
+      output1[ (⊢p-rename f t) ]
     ≡p〈 congoutput1 (≡-renamecong-p p) 〉
-      output1 (⊢p-rename f t')
+      output1[ (⊢p-rename f t') ]
     p∎
   ≡-renamecong-p {Γ} {Γ'} {σ} {f} (β⇀ {.Γ} {σ'} {.σ} {t} {u}) = 
       ⊢p-rename f (subst-p (ext-subst id-subst u) t)
@@ -875,19 +875,19 @@ module Lemmas where
       ⊢p-rename f t to (⊢p-rename (wk₂ f) u to ⊢p-rename (wk₂ (wk₂ f)) (⊢p-rename exchange (⊢p-rename wk₁ v)))
     p∎
   ≡-renamecong-p {Γ} {Γ'} {σ} {f} (inputto {.Γ} {τ} {.σ} {t} {u} {v}) = 
-      input (⊢p-rename f t) (⊢p-rename f u) to ⊢p-rename (wk₂ f) v
+      input[ (⊢p-rename f t) , (⊢p-rename f u) ] to ⊢p-rename (wk₂ f) v
     ≡p〈 inputto 〉
-      input (⊢p-rename f t to ⊢p-rename (wk₂ f) v) (⊢p-rename f u to ⊢p-rename (wk₂ f) v)
+      input[ (⊢p-rename f t to ⊢p-rename (wk₂ f) v) , (⊢p-rename f u to ⊢p-rename (wk₂ f) v) ]
     p∎
   ≡-renamecong-p {Γ} {Γ'} {σ} {f} (output0to {.Γ} {τ} {.σ} {t} {u}) = 
-      output0 (⊢p-rename f t) to ⊢p-rename (wk₂ f) u
+      output0[ (⊢p-rename f t) ] to ⊢p-rename (wk₂ f) u
     ≡p〈 output0to 〉
-      output0 (⊢p-rename f t to ⊢p-rename (wk₂ f) u)
+      output0[ (⊢p-rename f t to ⊢p-rename (wk₂ f) u) ]
     p∎
   ≡-renamecong-p {Γ} {Γ'} {σ} {f} (output1to {.Γ} {τ} {.σ} {t} {u}) = 
-      output1 (⊢p-rename f t) to ⊢p-rename (wk₂ f) u
+      output1[ (⊢p-rename f t) ] to ⊢p-rename (wk₂ f) u
     ≡p〈 output1to 〉
-      output1 (⊢p-rename f t to ⊢p-rename (wk₂ f) u)
+      output1[ (⊢p-rename f t to ⊢p-rename (wk₂ f) u) ]
     p∎
 
 
@@ -966,20 +966,20 @@ module Lemmas where
     ≡np〈 congreturn (≡-renamecong-nv p) 〉
       returnNP (⊢nv-rename f u)
     np∎
-  ≡-renamecong-np {Γ} {Γ'} {σ} {f} {inputNP t u} {inputNP t' u'} (conginput p q) = 
-      inputNP (⊢np-rename f t) (⊢np-rename f u)
+  ≡-renamecong-np {Γ} {Γ'} {σ} {f} {inputNP[ t , u ]} {inputNP[ t' , u' ]} (conginput p q) = 
+      inputNP[ (⊢np-rename f t) , (⊢np-rename f u) ]
     ≡np〈 conginput (≡-renamecong-np p) (≡-renamecong-np q) 〉
-      inputNP (⊢np-rename f t') (⊢np-rename f u')
+      inputNP[ (⊢np-rename f t') , (⊢np-rename f u') ]
     np∎
-  ≡-renamecong-np {Γ} {Γ'} {σ} {f} {output0NP t} {output0NP t'} (congoutput0 p) = 
-      output0NP (⊢np-rename f t)
+  ≡-renamecong-np {Γ} {Γ'} {σ} {f} {output0NP[ t ]} {output0NP[ t' ]} (congoutput0 p) = 
+      output0NP[ (⊢np-rename f t) ]
     ≡np〈 congoutput0 (≡-renamecong-np p) 〉
-      output0NP (⊢np-rename f t')
+      output0NP[ (⊢np-rename f t') ]
     np∎
-  ≡-renamecong-np {Γ} {Γ'} {σ} {f} {output1NP t} {output1NP t'} (congoutput1 p) = 
-      output1NP (⊢np-rename f t)
+  ≡-renamecong-np {Γ} {Γ'} {σ} {f} {output1NP[ t ]} {output1NP[ t' ]} (congoutput1 p) = 
+      output1NP[ (⊢np-rename f t) ]
     ≡np〈 congoutput1 (≡-renamecong-np p) 〉
-      output1NP (⊢np-rename f t')
+      output1NP[ (⊢np-rename f t') ]
     np∎
 
   ≡-renamecong-ap {Γ} {Γ'} {σ} {f} {t} {.t} ≡-refl = 
@@ -1202,17 +1202,17 @@ module Lemmas where
     ≅〈 cong2 (λ x y → x id y) (rename-env-lem-v' t) (rename-env-lem-v' u) 〉
       ⟦ ⊢v-rename f t ⟧v e (λ {σ'} → id) (⟦ ⊢v-rename f u ⟧v e)
     ∎
-  rename-env-lem-p' {Γ} {Γ'} {Γ''} {σ} {f} {e} (input t u) = 
+  rename-env-lem-p' {Γ} {Γ'} {Γ''} {σ} {f} {e} (input[ t , u ]) = 
       T-input (⟦ t ⟧p (λ z → e (f z))) (⟦ u ⟧p (λ z → e (f z)))
     ≅〈 cong2 T-input (rename-env-lem-p' {Γ} {Γ'} {Γ''} {σ} {f} {e} t) (rename-env-lem-p' {Γ} {Γ'} {Γ''} {σ} {f} {e} u) 〉
       T-input (⟦ ⊢p-rename f t ⟧p e) (⟦ ⊢p-rename f u ⟧p e)
     ∎
-  rename-env-lem-p' {Γ} {Γ'} {Γ''} {σ} {f} {e} (output0 t) = 
+  rename-env-lem-p' {Γ} {Γ'} {Γ''} {σ} {f} {e} (output0[ t ]) = 
       T-output0 (⟦ t ⟧p (λ z → e (f z)))
     ≅〈 cong T-output0 (rename-env-lem-p' {Γ} {Γ'} {Γ''} {σ} {f} {e} t) 〉
       T-output0 (⟦ ⊢p-rename f t ⟧p e)
     ∎
-  rename-env-lem-p' {Γ} {Γ'} {Γ''} {σ} {f} {e} (output1 t) = 
+  rename-env-lem-p' {Γ} {Γ'} {Γ''} {σ} {f} {e} (output1[ t ]) = 
       T-output1 (⟦ t ⟧p (λ z → e (f z)))
     ≅〈 cong T-output1 (rename-env-lem-p' {Γ} {Γ'} {Γ''} {σ} {f} {e} t) 〉
       T-output1 (⟦ ⊢p-rename f t ⟧p e)

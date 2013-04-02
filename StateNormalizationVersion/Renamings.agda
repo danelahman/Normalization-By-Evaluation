@@ -41,16 +41,3 @@ module Renamings where
   wk₂ : {Γ Γ' : Ctx} {σ : Ty} → Ren Γ Γ' → Ren (Γ :: σ) (Γ' :: σ)
   wk₂ f Hd = Hd
   wk₂ f (Tl v) = Tl (f v)
-
-
-  -- Weakening an idendity renaming is still an idendity renaming
-  wk₂-id-lem : 
-    {Γ : Ctx} 
-    {σ σ' : Ty} 
-    → (x : σ' ∈ (Γ :: σ)) 
-    → (wk₂ id-ren x) ≅ (id-ren x)
-
-  wk₂-id-lem Hd = 
-      Hd ∎
-  wk₂-id-lem (Tl x) = 
-      Tl x ∎

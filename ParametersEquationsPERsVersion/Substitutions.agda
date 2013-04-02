@@ -42,8 +42,8 @@ module Substitutions where
   subst-p s (app t u) = app (subst-v s t) (subst-v s u)
   subst-p s (or t u) = or (subst-p s t) (subst-p s u)
   subst-p s (if b then t else u) = if (subst-v s b) then (subst-p s t) else (subst-p s u)
-  subst-p s (input t) = input (subst-p (lift s) t)
-  subst-p s (output b t) = output (subst-v s b) (subst-p s t)
+  subst-p s (input[ t ]) = input[ (subst-p (lift s) t) ]
+  subst-p s (output[ b , t ]) = output[ (subst-v s b) , (subst-p s t) ]
 
 
   -- Identity substitution
@@ -138,19 +138,19 @@ module Substitutions where
     ≅〈 cong (λ x → if x then t else u) (id-subst-lem-v b) 〉
       if b then t else u 
     ∎
-  id-subst-lem-p {Γ} (input t) = 
-      input (subst-p (lift id-subst) t)
-    ≅〈 cong (λ (x : Sub (Γ :: bit) (Γ :: bit)) → input (subst-p x t)) (iext (λ σ → ext (λ x → id-subst-lift-lem x))) 〉
-      input (subst-p id-subst t)
-    ≅〈 cong input (id-subst-lem-p t) 〉
-      input t
+  id-subst-lem-p {Γ} (input[ t ]) = 
+      input[ (subst-p (lift id-subst) t) ]
+    ≅〈 cong (λ (x : Sub (Γ :: bit) (Γ :: bit)) → input[ (subst-p x t) ]) (iext (λ σ → ext (λ x → id-subst-lift-lem x))) 〉
+      input[ (subst-p id-subst t) ]
+    ≅〈 cong (λ x → input[ x ]) (id-subst-lem-p t) 〉
+      input[ t ]
     ∎
-  id-subst-lem-p (output b t) = 
-      output (subst-v id-subst b) (subst-p id-subst t)
-    ≅〈 cong (λ x → output (subst-v id-subst b) x) (id-subst-lem-p t) 〉
-      output (subst-v id-subst b) t
-    ≅〈 cong (λ x → output x t) (id-subst-lem-v b) 〉
-      output b t
+  id-subst-lem-p (output[ b , t ]) = 
+      output[ (subst-v id-subst b) , (subst-p id-subst t) ]
+    ≅〈 cong (λ x → output[ (subst-v id-subst b) , x ]) (id-subst-lem-p t) 〉
+      output[ (subst-v id-subst b) , t ]
+    ≅〈 cong (λ x → output[ x , t ]) (id-subst-lem-v b) 〉
+      output[ b , t ]
     ∎
 
 

@@ -49,9 +49,9 @@ module Syntax where
     _to_ : {σ τ : Ty} → Γ ⊢p σ → (Γ :: σ) ⊢p τ → Γ ⊢p τ
     app : {σ τ : Ty} → Γ ⊢v σ ⇀ τ → Γ ⊢v σ → Γ ⊢p τ
     -- producer term for the theory of input/output
-    input : {σ : Ty} → Γ ⊢p σ → Γ ⊢p σ → Γ ⊢p σ
-    output0 : {σ : Ty} → Γ ⊢p σ → Γ ⊢p σ
-    output1 : {σ : Ty} → Γ ⊢p σ → Γ ⊢p σ
+    input[_,_] : {σ : Ty} → Γ ⊢p σ → Γ ⊢p σ → Γ ⊢p σ
+    output0[_] : {σ : Ty} → Γ ⊢p σ → Γ ⊢p σ
+    output1[_] : {σ : Ty} → Γ ⊢p σ → Γ ⊢p σ
 
   infix 4 _⊢v_ 
   infix 4 _⊢p_
@@ -81,9 +81,9 @@ module Syntax where
     returnNP : {σ : Ty} → Γ ⊢nv σ → Γ ⊢np σ
     toNP : {σ τ : Ty} → Γ ⊢ap σ → (Γ :: σ) ⊢np τ → Γ ⊢np τ
     -- normal producer for the theory of non-determinism
-    inputNP : {σ : Ty} → Γ ⊢np σ → Γ ⊢np σ → Γ ⊢np σ
-    output0NP : {σ : Ty} → Γ ⊢np σ → Γ ⊢np σ
-    output1NP : {σ : Ty} → Γ ⊢np σ → Γ ⊢np σ
+    inputNP[_,_] : {σ : Ty} → Γ ⊢np σ → Γ ⊢np σ → Γ ⊢np σ
+    output0NP[_] : {σ : Ty} → Γ ⊢np σ → Γ ⊢np σ
+    output1NP[_] : {σ : Ty} → Γ ⊢np σ → Γ ⊢np σ
 
   -- Atomic producer terms
   data _⊢ap_ Γ where

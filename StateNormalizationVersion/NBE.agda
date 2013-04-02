@@ -1,8 +1,13 @@
+{-# OPTIONS --no-termination-check #-}
 ------------------------------------------------------
 ------------- Normalization by evaluation ------------
 ---------------- and algebraic effects ---------------
 ------------------------------------------------------
-------------------- NBE algorithm --------------------
+--------- NBE algorithm for the one-bit-state --------
+------------------------------------------------------
+------------------------------------------------------
+-- PS! Agda does not see the definition of strength --
+-- terminating. --------------------------------------
 ------------------------------------------------------
 
 open import Utils
@@ -10,18 +15,17 @@ open import Syntax
 open import Renamings
 open import Presheaves
 open import Monad
-open import Theory
 open import Substitutions
 
 
 module NBE where
 
 
-  -- Residualizing interpretation of types
+  -- Residuating interpretation of types
   ⟦_⟧ : Ty → Ctx → Set
   ⟦_⟧ unit Γ = Unit
   ⟦_⟧ (σ₁ ∧ σ₂) Γ = ⟦ σ₁ ⟧ Γ × ⟦ σ₂ ⟧ Γ
-  ⟦_⟧ (σ ⇀ τ) Γ = (⟦ σ ⟧ ⇒ ⟦ τ ⟧) Γ
+  ⟦_⟧ (σ ⇀ τ) Γ = (⟦ σ ⟧ ⇒T ⟦ τ ⟧) Γ
 
 
   -- Action of renaming on value denotations
@@ -31,156 +35,12 @@ module NBE where
   ⟦⟧-rename {σ ⇀ τ} f h = λ g d → h (g · f) d
 
 
-  -- Identity renaming lemma for renaming value denotations
-  ⟦⟧-rename-id-lem : 
-    {σ : Ty} 
-    {Γ : Ctx} 
-    → (d : ⟦ σ ⟧ Γ) 
-    → ⟦⟧-rename {σ} {Γ} {Γ} id-ren d ≅ d
-
-  ⟦⟧-rename-id-lem {unit} x = 
-      ⋆ 
-    ∎
-  ⟦⟧-rename-id-lem {σ₁ ∧ σ₂} x = 
-      ⟦⟧-rename {σ₁ ∧ σ₂} id-ren x
-    ≅〈 cong2 _,_ (⟦⟧-rename-id-lem {σ₁} (fst x)) (⟦⟧-rename-id-lem {σ₂} (snd x)) 〉
-      x 
-    ∎
-  ⟦⟧-rename-id-lem {σ ⇀ τ} x = 
-      (λ {Γ} → x {Γ}) 
-    ∎
-
-
-  -- Composition renaming lemma for renaming value denotations
-  ⟦⟧-rename-comp-lem : 
-    {σ : Ty} 
-    {Γ Γ' Γ'' : Ctx} 
-    {f : Ren Γ Γ'} 
-    {g : Ren Γ' Γ''} 
-    → (d : ⟦ σ ⟧ Γ) 
-    → ⟦⟧-rename {σ} g (⟦⟧-rename {σ} f d) ≅ ⟦⟧-rename {σ} (comp-ren g f) d
-
-  ⟦⟧-rename-comp-lem {unit} {Γ} {Γ'} {Γ''} {f} {g} d = 
-      ⋆
-    ∎
-  ⟦⟧-rename-comp-lem {σ₁ ∧ σ₂} {Γ} {Γ'} {Γ''} {f} {g} d = 
-      ⟦⟧-rename {σ₁ ∧ σ₂} g (⟦⟧-rename {σ₁ ∧ σ₂} f d)
-    ≅〈 cong2 _,_ (⟦⟧-rename-comp-lem {σ₁} (fst d)) (⟦⟧-rename-comp-lem {σ₂} (snd d)) 〉
-      ⟦⟧-rename {σ₁ ∧ σ₂} (comp-ren g f) d
-    ∎
-  ⟦⟧-rename-comp-lem {σ ⇀ τ} {Γ} {Γ'} {Γ''} {f} {g} d = 
-      (λ {Γ} → ⟦⟧-rename {σ ⇀ τ} (comp-ren g f) d)
-    ∎
-
-
   -- Value denotations presheaf
   Denot : Ty → Set^Ren
   Denot σ = record { 
               set = ⟦ σ ⟧; 
               act = ⟦⟧-rename {σ}
             }
-
-
-  -- Identity renaming lemma for renaming monadic denotations
-  T-rename-id-lem : 
-    {σ : Ty} 
-    {Γ : Ctx} 
-    → (d : T ⟦ σ ⟧ Γ) 
-    → T-rename {Denot σ} {Γ} {Γ} id-ren d ≅ d
-
-  T'-rename-id-lem : 
-    {σ : Ty} 
-    {Γ : Ctx} 
-    → (d : T' ⟦ σ ⟧ Γ) 
-    → T'-rename {Denot σ} {Γ} {Γ} id-ren d ≅ d
-
-  T''-rename-id-lem : 
-    {σ : Ty} 
-    {Γ : Ctx} 
-    → (d : T'' ⟦ σ ⟧ Γ) 
-    → T''-rename {Denot σ} {Γ} {Γ} id-ren d ≅ d
-
-  T''-rename-id-lem {σ} {Γ} (T-return d) = 
-      T-return (⟦⟧-rename {σ} id-ren d)
-    ≅〈 cong T-return (⟦⟧-rename-id-lem {σ} d) 〉
-      T-return d
-    ∎
-  T''-rename-id-lem {σ} {Γ} (T-to {.Γ} {σ'} d d') = 
-      T-to (⊢ap-rename id-ren d) (T-rename (wk₂ id-ren) d')
-    ≅〈 cong2 T-to (⊢ap-rename-id-lem d) (trans (cong (λ (x : Ren _ _) → T-rename {Denot σ} x d') (iext (λ σ'' → ext (λ x → (wk₂-id-lem {Γ} {σ'} {σ''} x))))) (T-rename-id-lem {σ} d')) 〉
-      T-to d d'
-    ∎
-
-  T'-rename-id-lem {σ} (T-update0 d) = 
-      T-update0 (T''-rename id-ren d)
-    ≅〈 cong T-update0 (T''-rename-id-lem {σ} d) 〉 
-      T-update0 d
-    ∎
-  T'-rename-id-lem {σ} (T-update1 d) = 
-      T-update1 (T''-rename id-ren d)
-    ≅〈 cong T-update1 (T''-rename-id-lem {σ} d) 〉 
-      T-update1 d
-    ∎
-
-  T-rename-id-lem {σ} (T-lookup d d') = 
-      T-lookup (T'-rename id-ren d) (T'-rename id-ren d')
-    ≅〈 cong2 T-lookup (T'-rename-id-lem {σ} d) (T'-rename-id-lem {σ} d') 〉
-      T-lookup d d'
-    ∎
-
-
-  -- Composition renaming lemma for renaming monadic denotations
-  T-rename-comp-lem : 
-    {σ : Ty} 
-    {Γ Γ' Γ'' : Ctx} 
-    {f : Ren Γ Γ'} 
-    {g : Ren Γ' Γ''} 
-    → (d : T ⟦ σ ⟧ Γ) 
-    → T-rename {Denot σ} g (T-rename {Denot σ} f d) ≅ T-rename {Denot σ} (comp-ren g f) d
-
-  T'-rename-comp-lem : 
-    {σ : Ty} 
-    {Γ Γ' Γ'' : Ctx} 
-    {f : Ren Γ Γ'} 
-    {g : Ren Γ' Γ''} 
-    → (d : T' ⟦ σ ⟧ Γ) 
-    → T'-rename {Denot σ} g (T'-rename {Denot σ} f d) ≅ T'-rename {Denot σ} (comp-ren g f) d
-
-  T''-rename-comp-lem : 
-    {σ : Ty} 
-    {Γ Γ' Γ'' : Ctx} 
-    {f : Ren Γ Γ'} 
-    {g : Ren Γ' Γ''} 
-    → (d : T'' ⟦ σ ⟧ Γ) 
-    → T''-rename {Denot σ} g (T''-rename {Denot σ} f d) ≅ T''-rename {Denot σ} (comp-ren g f) d
-
-  T''-rename-comp-lem {σ} {Γ} {Γ'} {Γ''} {f} {g} (T-return d) = 
-      T-return (⟦⟧-rename {σ} g (⟦⟧-rename {σ} f d))
-    ≅〈 cong T-return (⟦⟧-rename-comp-lem {σ} d) 〉
-      T-return (⟦⟧-rename {σ} (comp-ren g f) d)
-    ∎
-  T''-rename-comp-lem {σ} {Γ} {Γ'} {Γ''} {f} {g} (T-to d d') = 
-      T-to (⊢ap-rename g (⊢ap-rename f d)) (T-rename (wk₂ g) (T-rename (wk₂ f) d'))
-    ≅〈 cong2 T-to (⊢ap-rename-comp-lem d) (trans (T-rename-comp-lem {σ} d') (cong (λ (x : Ren _ _) → T-rename {Denot σ} x d') (iext (λ σ' → ext (λ x → sym (rename-wk₂-comp-lem x)))))) 〉
-      T-to (⊢ap-rename (comp-ren g f) d) (T-rename (wk₂ (comp-ren g f)) d')
-    ∎
-
-  T'-rename-comp-lem {σ} {Γ} {Γ'} {Γ''} {f} {g} (T-update0 d) = 
-      T-update0 (T''-rename g (T''-rename f d))
-    ≅〈 cong T-update0 (T''-rename-comp-lem {σ} d) 〉
-      T-update0 (T''-rename (λ {σ'} z → g (f z)) d)
-    ∎
-  T'-rename-comp-lem {σ} {Γ} {Γ'} {Γ''} {f} {g} (T-update1 d) = 
-      T-update1 (T''-rename g (T''-rename f d))
-    ≅〈 cong T-update1 (T''-rename-comp-lem {σ} d) 〉
-      T-update1 (T''-rename (λ {σ'} z → g (f z)) d)
-    ∎
-
-  T-rename-comp-lem {σ} {Γ} {Γ'} {Γ''} {f} {g} (T-lookup d d') = 
-      T-lookup (T'-rename g (T'-rename f d)) (T'-rename g (T'-rename f d'))
-    ≅〈 cong2 T-lookup (T'-rename-comp-lem {σ} d) (T'-rename-comp-lem {σ} d') 〉
-      T-lookup (T'-rename (comp-ren g f) d) (T'-rename (comp-ren g f) d')
-    ∎
 
 
   -- Monadic denotation presheaf
@@ -196,34 +56,6 @@ module NBE where
   -- Action of renaming on environments
   env-rename : {Γ Γ' Γ'' : Ctx} → Ren Γ' Γ'' → Env Γ Γ' → Env Γ Γ''
   env-rename f e {σ} x = ⟦⟧-rename {σ} f (e x)
-
-
-  -- Idendity renaming lemma for renaming environments
-  env-rename-id-lem : 
-    {Γ Γ' : Ctx} 
-    → (e : Env Γ Γ') 
-    → _≅_ {Env Γ Γ'} (env-rename id-ren e) {Env Γ Γ'} e
-
-  env-rename-id-lem {Γ} {Γ'} e = 
-      (λ {σ} → env-rename id-ren e {σ})
-    ≅〈 iext (λ σ → ext (λ x → ⟦⟧-rename-id-lem {σ} (e x))) 〉
-      (λ {σ} → e {σ})
-    ∎
-
-
-  -- Composition renaming lemma for renaming environments
-  env-rename-comp-lem : 
-    {Γ Γ' Γ'' Γ''' : List Ty} 
-    {f : Ren Γ' Γ''} 
-    {g : Ren Γ'' Γ'''} 
-    (e : Env Γ Γ') 
-    → _≅_ {Env Γ Γ'''} (env-rename g (env-rename f e)) {Env Γ Γ'''} (env-rename (comp-ren g f) e)
-
-  env-rename-comp-lem {Γ} {Γ'} {Γ''} {Γ'''} {f} {g} e = 
-      (λ {σ} → (env-rename g (env-rename f e)) {σ})
-    ≅〈 iext (λ σ → ext (λ x → ⟦⟧-rename-comp-lem {σ} (e x))) 〉
-      (λ {σ} → (env-rename (comp-ren g f) e) {σ})
-    ∎
 
 
   -- Environment presheaf
@@ -250,7 +82,7 @@ module NBE where
   ⟦ ⋆ ⟧v e = ⋆
   ⟦ fn t ⟧v e = λ f u → ⟦ t ⟧p (env-extend (env-rename f e) u) 
   ⟦_⟧p {Γ} {σ} (return t) e = η {Denot σ} (⟦ t ⟧v e)
-  ⟦_⟧p {Γ} {σ} (_to_ {σ'} t u) {Γ'} e = * {(Env-Denot Γ) ⊗ Denot σ'} {Denot σ} (λ v → ⟦ u ⟧p (env-extend ((fst v) {_}) (snd v)) ) {Γ'} ((t-r {Env-Denot Γ} {Denot σ'} {Γ'} (e , ⟦ t ⟧p e)))
+  ⟦_⟧p {Γ} {σ} (_to_ {σ'} t u) {Γ'} e = * {(Env-Denot Γ) ⊗ Denot σ'} {Denot σ} (λ v → ⟦ u ⟧p (env-extend ((fst v) {_}) (snd v)) ) {Γ'} ((strength {Env-Denot Γ} {Denot σ'} {Γ'} (e , ⟦ t ⟧p e)))
   ⟦_⟧p {Γ} {σ} (lookup t u) e = Alg-lookup {Denot σ} ((⟦ t ⟧p e) , (⟦ u ⟧p e))
   ⟦_⟧p {Γ} {σ} (update0 t) e = Alg-update0 {Denot σ} (⟦ t ⟧p e)
   ⟦_⟧p {Γ} {σ} (update1 t) e = Alg-update1 {Denot σ} (⟦ t ⟧p e)
@@ -267,28 +99,33 @@ module NBE where
   reify-v {σ₁ ∧ σ₂} d = pairNV (reify-v (fst d)) (reify-v (snd d))
   reify-v {σ ⇀ τ} d = fnNV (reify-p (d Tl (reflect-v {σ} (varAV Hd))))
 
+  reify-p (lfp d) with d (inl ⋆) | d (inr ⋆)
+  reify-p {σ} (lfp d) | inl _ , inl d' | inl _ , inl d'' = lookupNP[ (returnNP (reify-v {σ} d')) ,update0NP[ (returnNP (reify-v {σ} d'')) ]]
+  reify-p {σ} (lfp d) | inl _ , inl d' | inl _ , inr d'' = lookupNP[ (returnNP (reify-v {σ} d')) ,update0NP[ (toNP (fst (snd d'')) (reify-p (snd (snd d'')))) ]]
+  reify-p {σ} (lfp d) | inl _ , inr d' | inl _ , inl d'' = lookupNP[ (toNP (fst (snd d')) (reify-p (snd (snd d')))) ,update0NP[ (returnNP (reify-v {σ} d'')) ]]
+  reify-p {σ} (lfp d) | inl _ , inr d' | inl _ , inr d'' = lookupNP[ (toNP (fst (snd d')) (reify-p (snd (snd d')))) ,update0NP[ (toNP (fst (snd d'')) (reify-p (snd (snd d'')))) ]]
+
+  reify-p {σ} (lfp d) | inl _ , inl d' | inr _ , inl d'' = lookupNP[ (returnNP (reify-v {σ} d')) , (returnNP (reify-v {σ} d'')) ]
+  reify-p {σ} (lfp d) | inl _ , inl d' | inr _ , inr d'' = lookupNP[ (returnNP (reify-v {σ} d')) , (toNP (fst (snd d'')) (reify-p (snd (snd d'')))) ]
+  reify-p {σ} (lfp d) | inl _ , inr d' | inr _ , inl d'' = lookupNP[ (toNP (fst (snd d')) (reify-p (snd (snd d')))) , (returnNP (reify-v {σ} d'')) ]
+  reify-p {σ} (lfp d) | inl _ , inr d' | inr _ , inr d'' = lookupNP[ (toNP (fst (snd d')) (reify-p (snd (snd d')))) , (toNP (fst (snd d'')) (reify-p (snd (snd d'')))) ]
+
+  reify-p {σ} (lfp d) | inr _ , inl d' | inl _ , inl d'' = lookupNP[update1NP[ (returnNP (reify-v {σ} d')) ],update0NP[ (returnNP (reify-v {σ} d'')) ]]
+  reify-p {σ} (lfp d) | inr _ , inl d' | inl _ , inr d'' = lookupNP[update1NP[ (returnNP (reify-v {σ} d')) ],update0NP[ (toNP (fst (snd d'')) (reify-p (snd (snd d'')))) ]]
+  reify-p {σ} (lfp d) | inr _ , inr d' | inl _ , inl d'' = lookupNP[update1NP[ (toNP (fst (snd d')) (reify-p (snd (snd d')))) ],update0NP[ (returnNP (reify-v {σ} d'')) ]]
+  reify-p {σ} (lfp d) | inr _ , inr d' | inl _ , inr d'' = lookupNP[update1NP[ (toNP (fst (snd d')) (reify-p (snd (snd d')))) ],update0NP[ (toNP (fst (snd d'')) (reify-p (snd (snd d'')))) ]]
+
+  reify-p {σ} (lfp d) | inr _ , inl d' | inr _ , inl d'' = lookupNP[update1NP[ (returnNP (reify-v {σ} d')) ], (returnNP (reify-v {σ} d'')) ]
+  reify-p {σ} (lfp d) | inr _ , inl d' | inr _ , inr d'' = lookupNP[update1NP[ (returnNP (reify-v {σ} d')) ], (toNP (fst (snd d'')) (reify-p (snd (snd d'')))) ]
+  reify-p {σ} (lfp d) | inr _ , inr d' | inr _ , inl d'' = lookupNP[update1NP[ (toNP (fst (snd d')) (reify-p (snd (snd d')))) ], (returnNP (reify-v {σ} d'')) ]
+  reify-p {σ} (lfp d) | inr _ , inr d' | inr _ , inr d'' = lookupNP[update1NP[ (toNP (fst (snd d')) (reify-p (snd (snd d')))) ], (toNP (fst (snd d'')) (reify-p (snd (snd d'')))) ]
+
   reflect-v {unit} t = ⋆
   reflect-v {σ₁ ∧ σ₂} t = reflect-v (proj₁AV t) , reflect-v (proj₂AV t)
   reflect-v {σ ⇀ τ} t = λ f v → reflect-p (appAP (⊢av-rename f t) (reify-v v))
 
-  reify-p (T-lookup (T-update0 (T-return d)) (T-update0 (T-return d'))) = lookupNP (update0NP (returnNP (reify-v d))) (update0NP (returnNP (reify-v d')))
-  reify-p (T-lookup (T-update0 (T-return d)) (T-update0 (T-to t' d'))) = lookupNP (update0NP (returnNP (reify-v d))) (update0NP (toNP t' (reify-p d')))
-  reify-p (T-lookup (T-update0 (T-return d)) (T-update1 (T-return d'))) = lookupNP (update0NP (returnNP (reify-v d))) (update1NP (returnNP (reify-v d')))
-  reify-p (T-lookup (T-update0 (T-return d)) (T-update1 (T-to t' d'))) = lookupNP (update0NP (returnNP (reify-v d))) (update1NP (toNP t' (reify-p d')))
-  reify-p (T-lookup (T-update0 (T-to t d)) (T-update0 (T-return d'))) = lookupNP (update0NP (toNP t (reify-p d))) (update0NP (returnNP (reify-v d')))
-  reify-p (T-lookup (T-update0 (T-to t d)) (T-update0 (T-to t' d'))) = lookupNP (update0NP (toNP t (reify-p d))) (update0NP (toNP t' (reify-p d')))
-  reify-p (T-lookup (T-update0 (T-to t d)) (T-update1 (T-return d'))) = lookupNP (update0NP (toNP t (reify-p d))) (update1NP (returnNP (reify-v d')))
-  reify-p (T-lookup (T-update0 (T-to t d)) (T-update1 (T-to t' d'))) = lookupNP (update0NP (toNP t (reify-p d))) (update1NP (toNP t' (reify-p d')))
-  reify-p (T-lookup (T-update1 (T-return d)) (T-update0 (T-return d'))) = lookupNP (update1NP (returnNP (reify-v d))) (update0NP (returnNP (reify-v d')))
-  reify-p (T-lookup (T-update1 (T-return d)) (T-update0 (T-to t' d'))) = lookupNP (update1NP (returnNP (reify-v d))) (update0NP (toNP t' (reify-p d')))
-  reify-p (T-lookup (T-update1 (T-return d)) (T-update1 (T-return d'))) = lookupNP (update1NP (returnNP (reify-v d))) (update1NP (returnNP (reify-v d')))
-  reify-p (T-lookup (T-update1 (T-return d)) (T-update1 (T-to t' d'))) = lookupNP (update1NP (returnNP (reify-v d))) (update1NP (toNP t' (reify-p d')))
-  reify-p (T-lookup (T-update1 (T-to t d)) (T-update0 (T-return d'))) = lookupNP (update1NP (toNP t (reify-p d))) (update0NP (returnNP (reify-v d')))
-  reify-p (T-lookup (T-update1 (T-to t d)) (T-update0 (T-to t' d'))) = lookupNP (update1NP (toNP t (reify-p d))) (update0NP (toNP t' (reify-p d')))
-  reify-p (T-lookup (T-update1 (T-to t d)) (T-update1 (T-return d'))) = lookupNP (update1NP (toNP t (reify-p d))) (update1NP (returnNP (reify-v d')))
-  reify-p (T-lookup (T-update1 (T-to t d)) (T-update1 (T-to t' d'))) = lookupNP (update1NP (toNP t (reify-p d))) (update1NP (toNP t' (reify-p d')))
+  reflect-p {σ} t = lfp (λ b → b , (inr (σ , (t , (η {Denot σ} (reflect-v {σ} (varAV Hd)))))))
 
-  reflect-p {σ} t = T-lookup (T-update0 (T-to t (η {Denot σ} (reflect-v {σ} (varAV Hd))))) (T-update1 (T-to t (η {Denot σ} (reflect-v {σ} (varAV Hd)))))
 
   -- Identity environment
   id-env : {Γ : Ctx} → Env Γ Γ

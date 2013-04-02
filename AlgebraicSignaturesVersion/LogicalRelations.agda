@@ -29,9 +29,9 @@ module LogicalRelations where
   _◁v_ {Γ} {σ ⇀ τ} t d = {Γ' : Ctx} → (f : Ren Γ Γ') → {u : Γ' ⊢v σ} → {e : ⟦ σ ⟧ Γ'} → u ◁v e → app (⊢v-rename f t) u ◁p d f e
   _◁p_ {Γ} {σ} t (T-return d) = Σ (Γ ⊢v σ) (λ u → (Γ ⊢p t ≡ (return u)) × (u ◁v d))
   _◁p_ {Γ} {σ} t (T-to {.Γ} {τ} u d') = Σ (Γ :: τ ⊢p σ) (λ v → (Γ ⊢p t ≡ ((⊢ap-embed u) to v)) × (v ◁p d'))
-  _◁p_ {Γ} {σ} t (T-input d d') = Σ (Γ ⊢p σ) (λ u → Σ (Γ ⊢p σ) (λ v → ((Γ ⊢p t ≡ (input u v)) × (u ◁p d) × (v ◁p d'))))
-  _◁p_ {Γ} {σ} t (T-output0 d) = Σ (Γ ⊢p σ) (λ u → ((Γ ⊢p t ≡ (output0 u)) × (u ◁p d)))
-  _◁p_ {Γ} {σ} t (T-output1 d) = Σ (Γ ⊢p σ) (λ u → ((Γ ⊢p t ≡ (output1 u)) × (u ◁p d)))
+  _◁p_ {Γ} {σ} t (T-input d d') = Σ (Γ ⊢p σ) (λ u → Σ (Γ ⊢p σ) (λ v → ((Γ ⊢p t ≡ (input[ u , v ])) × (u ◁p d) × (v ◁p d'))))
+  _◁p_ {Γ} {σ} t (T-output0 d) = Σ (Γ ⊢p σ) (λ u → ((Γ ⊢p t ≡ (output0[ u ])) × (u ◁p d)))
+  _◁p_ {Γ} {σ} t (T-output1 d) = Σ (Γ ⊢p σ) (λ u → ((Γ ⊢p t ≡ (output1[ u ])) × (u ◁p d)))
   _◁e_ {Γ} {Γ'} s e = {σ : Ty} → (x : σ ∈ Γ) → (s x) ◁v (e x)
 
 
@@ -329,15 +329,15 @@ module LogicalRelations where
       {d = (⟦ t ⟧v e id-ren (⟦ u ⟧v e))} 
       (◁v-fundamental-lemma s e t r (id-ren) (◁v-fundamental-lemma s e u r)) 
       (congapp (≅2≡-v (⊢v-rename-id-lem (subst-v s t))) ≡-refl)
-  ◁p-fundamental-lemma s e (input t u) r = 
+  ◁p-fundamental-lemma s e (input[ t , u ]) r = 
     (subst-p s t) , 
     ((subst-p s u) , 
       ((≡-refl , 
       (◁p-fundamental-lemma s e t r)) , 
         (◁p-fundamental-lemma s e u r)))
-  ◁p-fundamental-lemma s e (output0 t) r = 
+  ◁p-fundamental-lemma s e (output0[ t ]) r = 
     (subst-p s t) , (≡-refl , (◁p-fundamental-lemma s e t r))
-  ◁p-fundamental-lemma s e (output1 t) r = 
+  ◁p-fundamental-lemma s e (output1[ t ]) r = 
     (subst-p s t) , (≡-refl , (◁p-fundamental-lemma s e t r))
 
   ◁p-*-strength-fundamental-lemma {Γ} {Γ'} {σ} {τ} {s} {e} t (T-return d) (v , (p , r'')) u r' = 

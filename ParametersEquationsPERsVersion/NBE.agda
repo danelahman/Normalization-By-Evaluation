@@ -259,8 +259,8 @@ module NBE where
   ⟦ app t u ⟧p e = (⟦ t ⟧v e) id (⟦ u ⟧v e)
   ⟦ or t u ⟧p e = Alg-or (⟦ t ⟧p e) (⟦ u ⟧p e)
   ⟦ if b then t else u ⟧p e = Alg-if (⟦ b ⟧v e) (⟦ t ⟧p e) (⟦ u ⟧p e)
-  ⟦ input t ⟧p e = Alg-input (⟦ t ⟧p (env-extend (env-rename wk₁ e) (bit2NV (varAV Hd))))
-  ⟦ output b t ⟧p e = Alg-output (⟦ b ⟧v e) (⟦ t ⟧p e)
+  ⟦ input[ t ] ⟧p e = Alg-input (⟦ t ⟧p (env-extend (env-rename wk₁ e) (bit2NV (varAV Hd))))
+  ⟦ output[ b , t ] ⟧p e = Alg-output (⟦ b ⟧v e) (⟦ t ⟧p e)
 
 
   -- Reification and reflection
@@ -283,8 +283,8 @@ module NBE where
   reify-p (T-to t u) = toNP t (reify-p u)
   reify-p (T-or t u) = orNP (reify-p t) (reify-p u)
   reify-p (T-if b t u) = ifNP b then (reify-p t) else (reify-p u)
-  reify-p (T-input t) = inputNP (reify-p t)
-  reify-p (T-output b t) = outputNP b (reify-p t)
+  reify-p (T-input t) = inputNP[ (reify-p t) ]
+  reify-p (T-output b t) = outputNP[ b , (reify-p t) ]
 
   reflect-p {σ} t = T-to t (η {Denot σ} (reflect-v {σ} (varAV Hd)))
 

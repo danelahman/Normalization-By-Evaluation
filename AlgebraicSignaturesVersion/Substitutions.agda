@@ -38,9 +38,9 @@ module Substitutions where
   subst-p s (return t) = return (subst-v s t)
   subst-p s (t to u) = subst-p s t to subst-p (lift s) u
   subst-p s (app t u) = app (subst-v s t) (subst-v s u)
-  subst-p s (input t u) = input (subst-p s t) (subst-p s u)
-  subst-p s (output0 t) = output0 (subst-p s t)
-  subst-p s (output1 t) = output1 (subst-p s t)
+  subst-p s (input[ t , u ]) = input[ (subst-p s t) , (subst-p s u) ]
+  subst-p s (output0[ t ]) = output0[ (subst-p s t) ]
+  subst-p s (output1[ t ]) = output1[ (subst-p s t) ]
 
   -- Identity substitution
   id-subst : {Γ : Ctx} → Sub Γ Γ
@@ -116,20 +116,20 @@ module Substitutions where
     ≅〈 cong2 app (id-subst-lem-v t) (id-subst-lem-v u) 〉
       app t u 
     ∎
-  id-subst-lem-p (input t u) = 
-      input (subst-p id-subst t) (subst-p id-subst u)
-    ≅〈 cong2 input (id-subst-lem-p t) (id-subst-lem-p u) 〉
-      input t u 
+  id-subst-lem-p (input[ t , u ]) = 
+      input[ (subst-p id-subst t) , (subst-p id-subst u) ]
+    ≅〈 cong2 (λ x y → input[ x , y ]) (id-subst-lem-p t) (id-subst-lem-p u) 〉
+      input[ t , u ] 
     ∎
-  id-subst-lem-p (output0 t) = 
-      output0 (subst-p id-subst t)
-    ≅〈 cong output0 (id-subst-lem-p t) 〉
-      output0 t
+  id-subst-lem-p (output0[ t ]) = 
+      output0[ (subst-p id-subst t) ]
+    ≅〈 cong (λ x → output0[ x ]) (id-subst-lem-p t) 〉
+      output0[ t ]
     ∎
-  id-subst-lem-p (output1 t) = 
-      output1 (subst-p id-subst t)
-    ≅〈 cong output1 (id-subst-lem-p t) 〉
-      output1 t
+  id-subst-lem-p (output1[ t ]) = 
+      output1[ (subst-p id-subst t) ]
+    ≅〈 cong (λ x → output1[ x ]) (id-subst-lem-p t) 〉
+      output1[ t ]
     ∎
 
 

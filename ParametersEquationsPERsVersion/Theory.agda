@@ -50,8 +50,8 @@ module Theory where
     congreturn : {Γ : Ctx} {σ : Ty} {t t' : Γ ⊢v σ} → Γ ⊢v t ≡ t' → Γ ⊢p (return t) ≡ (return t')
     congor : {Γ : Ctx} {σ : Ty} {t t' u u' : Γ ⊢p σ} → Γ ⊢p t ≡ t' → Γ ⊢p u ≡ u' → Γ ⊢p or t u ≡ or t' u'
     congif : {Γ : Ctx} {σ : Ty} {b b' : Γ ⊢v bit} {t u t' u' : Γ ⊢p σ} → Γ ⊢v b ≡ b' → Γ ⊢p t ≡ t' → Γ ⊢p u ≡ u' → Γ ⊢p if b then t else u ≡ if b' then t' else u'
-    conginput : {Γ : Ctx} {σ : Ty} {t t' : Γ :: bit ⊢p σ} → Γ :: bit ⊢p t ≡ t' → Γ ⊢p input t ≡ input t'
-    congoutput : {Γ : Ctx} {σ : Ty} {b b' : Γ ⊢v bit} {t t' : Γ ⊢p σ} → Γ ⊢v b ≡ b' → Γ ⊢p t ≡ t' → Γ ⊢p output b t ≡ output b' t'
+    conginput : {Γ : Ctx} {σ : Ty} {t t' : Γ :: bit ⊢p σ} → Γ :: bit ⊢p t ≡ t' → Γ ⊢p input[ t ] ≡ input[ t' ]
+    congoutput : {Γ : Ctx} {σ : Ty} {b b' : Γ ⊢v bit} {t t' : Γ ⊢p σ} → Γ ⊢v b ≡ b' → Γ ⊢p t ≡ t' → Γ ⊢p output[ b , t ] ≡ output[ b' , t' ]
     -- beta
     β⇀ : {Γ : Ctx} {σ τ : Ty} {t : Γ :: σ ⊢p τ} {u : Γ ⊢v σ} → Γ ⊢p subst-p (ext-subst id-subst u) t ≡ (app (fn t) u)
     βto : {Γ : Ctx} {σ τ : Ty} {t : Γ :: σ ⊢p τ} {u : Γ ⊢v σ} → Γ ⊢p ((return u) to t) ≡ subst-p (ext-subst id-subst u) t
@@ -62,8 +62,8 @@ module Theory where
     -- to-op
     orto : {Γ : Ctx} {σ τ : Ty} {t u : Γ ⊢p σ} {v : Γ :: σ ⊢p τ} → Γ ⊢p (or t u) to v ≡ or (t to v) (u to v)
     ifto : {Γ : Ctx} {σ τ : Ty} {b : Γ ⊢v bit} {t u : Γ ⊢p σ} {v : Γ :: σ ⊢p τ} → Γ ⊢p (if b then t else u) to v ≡ if b then (t to v) else (u to v)
-    inputto : {Γ : Ctx} {σ τ : Ty} {t : Γ :: bit ⊢p σ} {u : Γ :: σ ⊢p τ} → Γ ⊢p (input t) to u ≡ input (t to ⊢p-rename exchange (⊢p-rename wk₁ u))
-    outputto : {Γ : Ctx} {σ τ : Ty} {b : Γ ⊢v bit} {t : Γ ⊢p σ} {v : Γ :: σ ⊢p τ} → Γ ⊢p (output b t) to v ≡ output b (t to v)
+    inputto : {Γ : Ctx} {σ τ : Ty} {t : Γ :: bit ⊢p σ} {u : Γ :: σ ⊢p τ} → Γ ⊢p (input[ t ]) to u ≡ input[ (t to ⊢p-rename exchange (⊢p-rename wk₁ u)) ]
+    outputto : {Γ : Ctx} {σ τ : Ty} {b : Γ ⊢v bit} {t : Γ ⊢p σ} {v : Γ :: σ ⊢p τ} → Γ ⊢p (output[ b , t ]) to v ≡ output[ b , (t to v) ]
     -- equational theory of nondeterministic choice
     or-idempotency : {Γ : Ctx} {σ : Ty} {t : Γ ⊢p σ} → Γ ⊢p or t t ≡ t
     or-commutativity : {Γ : Ctx} {σ : Ty} {t u : Γ ⊢p σ} → Γ ⊢p or t u ≡ or u t
@@ -166,8 +166,8 @@ module Theory where
     congto : {Γ : Ctx} {σ τ : Ty} {t t' : Γ ⊢ap σ} {u u' : Γ :: σ ⊢np τ} → Γ ⊢ap t ≡ t' → Γ :: σ ⊢np u ≡ u' → Γ ⊢np (toNP t u) ≡ (toNP t' u')
     congor : {Γ : Ctx} {σ : Ty} {t t' u u' : Γ ⊢np σ} → Γ ⊢np t ≡ t' → Γ ⊢np u ≡ u' → Γ ⊢np orNP t u ≡ orNP t' u'
     congif : {Γ : Ctx} {σ : Ty} {b b' : Γ ⊢nv bit} {t u t' u' : Γ ⊢np σ} → Γ ⊢nv b ≡ b' → Γ ⊢np t ≡ t' → Γ ⊢np u ≡ u' → Γ ⊢np ifNP b then t else u ≡ ifNP b' then t' else u'
-    conginput : {Γ : Ctx} {σ : Ty} {t t' : Γ :: bit ⊢np σ} → Γ :: bit ⊢np t ≡ t' → Γ ⊢np inputNP t ≡ inputNP t'
-    congoutput : {Γ : Ctx} {σ : Ty} {b b' : Γ ⊢nv bit} {t t' : Γ ⊢np σ} → Γ ⊢nv b ≡ b' → Γ ⊢np t ≡ t' → Γ ⊢np outputNP b t ≡ outputNP b' t'
+    conginput : {Γ : Ctx} {σ : Ty} {t t' : Γ :: bit ⊢np σ} → Γ :: bit ⊢np t ≡ t' → Γ ⊢np inputNP[ t ] ≡ inputNP[ t' ]
+    congoutput : {Γ : Ctx} {σ : Ty} {b b' : Γ ⊢nv bit} {t t' : Γ ⊢np σ} → Γ ⊢nv b ≡ b' → Γ ⊢np t ≡ t' → Γ ⊢np outputNP[ b , t ] ≡ outputNP[ b' , t' ]
     -- equational theory of nondeterministic choice
     or-idempotency : {Γ : Ctx} {σ : Ty} {t : Γ ⊢np σ} → Γ ⊢np orNP t t ≡ t
     or-commutativity : {Γ : Ctx} {σ : Ty} {t u : Γ ⊢np σ} → Γ ⊢np orNP t u ≡ orNP u t
@@ -396,15 +396,15 @@ module Theory where
     ≡p〈 congif (⊢nv-embed-lem p) (⊢np-embed-lem q) (⊢np-embed-lem r) 〉
       if ⊢nv-embed b' then ⊢np-embed t' else (⊢np-embed u')
     p∎
-  ⊢np-embed-lem {Γ} {σ} {inputNP t} {inputNP t'} (conginput p) = 
-      input (⊢np-embed t)
+  ⊢np-embed-lem {Γ} {σ} {inputNP[ t ]} {inputNP[ t' ]} (conginput p) = 
+      input[ (⊢np-embed t) ]
     ≡p〈 conginput (⊢np-embed-lem p) 〉
-      input (⊢np-embed t')
+      input[ (⊢np-embed t') ]
     p∎
-  ⊢np-embed-lem {Γ} {σ} {outputNP b t} {outputNP b' t'} (congoutput p q) = 
-      output (⊢nv-embed b) (⊢np-embed t)
+  ⊢np-embed-lem {Γ} {σ} {outputNP[ b , t ]} {outputNP[ b' , t' ]} (congoutput p q) = 
+      output[ (⊢nv-embed b) , (⊢np-embed t) ]
     ≡p〈 congoutput (⊢nv-embed-lem p) (⊢np-embed-lem q) 〉
-      output (⊢nv-embed b') (⊢np-embed t')
+      output[ (⊢nv-embed b') , (⊢np-embed t') ]
     p∎
   ⊢np-embed-lem {Γ} {σ} {.(orNP t t)} {t} or-idempotency = 
       or (⊢np-embed t) (⊢np-embed t)
