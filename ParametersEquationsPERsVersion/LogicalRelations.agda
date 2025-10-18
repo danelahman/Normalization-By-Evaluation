@@ -145,7 +145,7 @@ module LogicalRelations where
     void
   ◁v-invariance {Γ} {σ₁ ∧ σ₂} (r , r') p = 
     (◁v-invariance r (congproj₁ p)) , (◁v-invariance r' (congproj₂ p))
-  ◁v-invariance {Γ} {σ ⇀ τ} {t} {t'} {d} r p = λ {Γ'} f {u} {e} r' → 
+  ◁v-invariance {Γ} {σ ⇀ τ} {t} {t'} {d} r p = λ f {u} {e} r' → 
     ◁p-invariance {d = d f e} (r f r') (congapp (≡-renamecong-v p) ≡-refl)
   ◁p-invariance {Γ} {σ} {t} {t'} {T-return d} r p = 
     fst r , ((≡-trans (≡-sym p) (fst (snd r))) , snd (snd r))
@@ -329,7 +329,7 @@ module LogicalRelations where
     ≡-refl
   ◁v-fundamental-lemma s e one r = 
     ≡-refl
-  ◁v-fundamental-lemma {Γ} {Γ'} {σ ⇀ τ} s e (fn t) r = λ {Γ''} f' {u} {d} r' → 
+  ◁v-fundamental-lemma {Γ} {Γ'} {σ ⇀ τ} s e (fn t) r = λ f' {u} {d} r' → 
     ◁p-invariance 
       {t' = (app (fn (⊢p-rename (wk₂ f') (subst-p (lift s) t))) u)} 
       {d = (⟦ t ⟧p (env-extend (λ {σ'} x → ⟦⟧-rename {σ'} f' (e x)) d))} 

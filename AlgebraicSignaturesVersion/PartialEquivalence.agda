@@ -57,8 +57,8 @@ module PartialEquivalence where
     sym p
   ≈-sym {Γ} {σ₁ ∧ σ₂} p = 
     ≈-sym {Γ} {σ₁} (fst p) , (≈-sym {Γ} {σ₂} (snd p))
-  ≈-sym {Γ} {σ ⇀ τ} p = λ {Γ'} q → 
-    ≈T-sym (p (≈-sym {Γ'} {σ} q))
+  ≈-sym {Γ} {σ ⇀ τ} p = λ q → 
+    ≈T-sym (p (≈-sym q))
 
 
   -- Local reflexivity of PER on semantic values
@@ -73,8 +73,8 @@ module PartialEquivalence where
     refl
   ≈-refl {Γ} {σ₁ ∧ σ₂} p = 
     (≈-refl {Γ} {σ₁} (fst p)) , (≈-refl {Γ} {σ₂} (snd p))
-  ≈-refl {Γ} {σ ⇀ τ} p = λ {Γ'} q → 
-    ≈T-trans (p (≈-refl {Γ'} {σ} q)) (≈T-sym (p (≈-sym {Γ'} {σ} q)))
+  ≈-refl {Γ} {σ ⇀ τ} p = λ q → 
+    ≈T-trans (p (≈-refl q)) (≈T-sym (p (≈-sym q)))
 
 
   -- Local reflexivity of PER on residualizing monad
@@ -102,8 +102,8 @@ module PartialEquivalence where
     trans p q
   ≈-trans {Γ} {σ₁ ∧ σ₂} p q = 
     (≈-trans {Γ} {σ₁} (fst p) (fst q)) , (≈-trans {Γ} {σ₂} (snd p) (snd q))
-  ≈-trans {Γ} {σ ⇀ τ} p q = λ {Γ'} r → 
-    ≈T-trans (p r) (q (≈-refl {Γ'} {σ} (≈-sym {Γ'} {σ} r)))
+  ≈-trans {Γ} {σ ⇀ τ} p q = λ r → 
+    ≈T-trans (p r) (q (≈-refl (≈-sym r)))
 
 
   -- Local reflexivity of PER on environments

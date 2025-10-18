@@ -129,7 +129,7 @@ module PartialEquivalenceLemmas where
     ≡-refl
   ≈-fundamental-lemma one p = 
     ≡-refl
-  ≈-fundamental-lemma (fn {σ} {τ} t) p = λ {Γ''} {f} {d} {d'} q → 
+  ≈-fundamental-lemma (fn {σ} {τ} t) p = λ q → 
     ≈T-fundamental-lemma t (≈e-extend-lem (≈e-monotonicity p) q)
 
   ≈T-fundamental-lemma (return t) p = 
@@ -347,8 +347,8 @@ module PartialEquivalenceLemmas where
     refl
   reflect-cong-v {Γ} {σ₁ ∧ σ₂} refl = 
     reflect-cong-v {Γ} {σ₁} refl , reflect-cong-v {Γ} {σ₂} refl
-  reflect-cong-v {Γ} {σ ⇀ τ} refl = λ {Γ'} {h} {d} {d'} p → 
-    congto (congapp refl (reify-cong-v p)) (congreturn (reflect-cong-v {Γ' :: τ} {τ} refl))
+  reflect-cong-v {Γ} {σ ⇀ τ} refl = λ p → 
+    congto (congapp refl (reify-cong-v p)) (congreturn (reflect-cong-v refl))
   reflect-cong-p {Γ} {σ} p = 
     congto p (congreturn (reflect-cong-v {Γ :: σ} {σ} refl))
 
@@ -676,8 +676,8 @@ module PartialEquivalenceLemmas where
     ≡-refl
   rename-env-lem-v one p = 
     ≡-refl
-  rename-env-lem-v {Γ} {Γ'} {Γ''} {σ ⇀ τ} {f} {e} {e'} (fn t) p = λ {Γ'''} {h} {d} {d'} q → 
-    ≈T-trans (≈T-fundamental-lemma t (λ {σ'} x → env-extend-rename-wk₂-lem {e = env-rename h e} {e' = env-rename h e} (≈-refl {Γ'''} {σ} q) (≈e-monotonicity (≈e-refl p)) x)) (rename-env-lem-p t (≈e-extend-lem (≈e-monotonicity p) q))
+  rename-env-lem-v {Γ} {Γ'} {Γ''} {σ ⇀ τ} {f} {e} {e'} (fn t) p = λ q → 
+    ≈T-trans (≈T-fundamental-lemma t (λ {σ'} x → env-extend-rename-wk₂-lem (≈-refl q) (≈e-monotonicity (≈e-refl p)) x)) (rename-env-lem-p t (≈e-extend-lem (≈e-monotonicity p) q))
   rename-env-lem-p (return t) p = 
     congreturn (rename-env-lem-v t p)
   rename-env-lem-p {Γ} {Γ'} {Γ''} {σ} {f} {e} {e'} (t to u) p = 
@@ -740,8 +740,8 @@ module PartialEquivalenceLemmas where
     ≡-refl
   ⟦⟧v-naturality' one p = 
     ≡-refl
-  ⟦⟧v-naturality' {Γ} {Γ'} {Γ''} {σ ⇀ τ} {e} {e'} {f} (fn t) p = λ {Γ'''} q → 
-    ≈T-fundamental-lemma t (≈e-extend-lem (λ {σ'} x → ⟦⟧-rename-comp-lem' {Γ'} {Γ''} {Γ'''} {σ'} (p x)) q)
+  ⟦⟧v-naturality' {Γ} {Γ'} {Γ''} {σ ⇀ τ} {e} {e'} {f} (fn t) p = λ q → 
+    ≈T-fundamental-lemma t (≈e-extend-lem (λ {σ'} x → ⟦⟧-rename-comp-lem' (p x)) q)
 
 
   -- Interpretation maps are natural for substitutions 
@@ -846,18 +846,15 @@ module PartialEquivalenceLemmas where
     ≡-refl
   env-extend-subst-lem-v one p = 
     ≡-refl
-  env-extend-subst-lem-v {Γ} {Γ'} {Γ''} {σ ⇀ τ} {s} {e} {e'} (fn t) p = λ {Γ'''} {h} {d} {d'} q → 
+  env-extend-subst-lem-v {Γ} {Γ'} {Γ''} {σ ⇀ τ} {s} {e} {e'} (fn t) p = λ q → 
     ≈T-trans 
       (≈T-fundamental-lemma 
         t 
         (≈e-trans 
-          {e = env-extend (λ {σ} x' → ⟦⟧-rename {σ} h (⟦ s x' ⟧v e)) d} 
-          (≈e-extend-lem (λ x → ⟦⟧v-naturality' (s x) (≈e-refl p)) (≈-refl {Γ'''} {σ} q)) 
-          (sub-to-env-lift-lem {e = env-rename h e} {e' = env-rename h e} d d (≈-refl {Γ'''} {σ} q) (≈e-monotonicity (≈e-refl p))))) 
+          (≈e-extend-lem (λ x → ⟦⟧v-naturality' (s x) (≈e-refl p)) (≈-refl q)) 
+          (sub-to-env-lift-lem _ _ (≈-refl q) (≈e-monotonicity (≈e-refl p))))) 
       (env-extend-subst-lem-p 
         {s = lift s} 
-        {e = env-extend (env-rename h e) d} 
-        {e' = env-extend (env-rename h e') d'} 
         t 
         (≈e-extend-lem (≈e-monotonicity p) q))
   env-extend-subst-lem-p (return t) p = 

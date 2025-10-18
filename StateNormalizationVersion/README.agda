@@ -10,7 +10,7 @@
 --- a signature of strictly positive residuating   ---
 --- functors Ren -> Set                            ---
 ------------------------------------------------------
---------- Code tested with Agda version 2.3.1 --------
+--------- Code tested with Agda version 2.8.0 --------
 ------------------------------------------------------
 
 

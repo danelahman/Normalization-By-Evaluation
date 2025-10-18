@@ -114,9 +114,9 @@ module Theory where
   _p∎ : {Γ : Ctx} {σ : Ty} (x : Γ ⊢p σ) → Γ ⊢p x ≡ x
   x p∎ = ≡-refl
 
-  infix  2 _v∎
+  infix  3 _v∎
   infixr 2 _≡v〈_〉_
-  infix  2 _p∎
+  infix  3 _p∎
   infixr 2 _≡p〈_〉_
 
 
@@ -245,13 +245,13 @@ module Theory where
   x ap∎ = ≡-refl
 
 
-  infix  2 _nv∎
+  infix  3 _nv∎
   infixr 2 _≡nv〈_〉_
-  infix  2 _np∎
+  infix  3 _np∎
   infixr 2 _≡np〈_〉_
-  infix  2 _av∎
+  infix  3 _av∎
   infixr 2 _≡av〈_〉_
-  infix  2 _ap∎
+  infix  3 _ap∎
   infixr 2 _≡ap〈_〉_
 
 

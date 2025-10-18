@@ -140,6 +140,8 @@ module Monad where
   μ {X} {Y} x = * {T-Set^Ren X} {X} id x
 
 
+  -- TODO: please the termination checker
+  {-# TERMINATING #-}
   -- Strength of the residualizing monad
   t-r : {X Y : Set^Ren} → Set^Ren-Map (X ⊗ (T-Set^Ren Y)) (T-Set^Ren (X ⊗ Y))
   t-r {Γ} (x , T-return y)  = T-return (x , y)

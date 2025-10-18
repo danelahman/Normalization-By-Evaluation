@@ -11,7 +11,7 @@
 -- normal forms are identified up-to equations      --
 -- for the effects.                                 --
 ------------------------------------------------------
---------- Code tested with Agda version 2.3.1 --------
+--------- Code tested with Agda version 2.8.0 --------
 ------------------------------------------------------
 
 module README where

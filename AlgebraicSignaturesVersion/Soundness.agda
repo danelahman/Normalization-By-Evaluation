@@ -88,19 +88,17 @@ module Soundness where
   soundness-v {Γ} {Γ'} {unit} t .⋆ η⋆ q | ⋆ = refl
   soundness-v t .(pair (proj₁ t) (proj₂ t)) η× q = 
     ≈-fundamental-lemma t q
-  soundness-v {Γ} {Γ'} {σ ⇀ τ} {e} {e'} .(fn (app (⊢v-rename (λ {σ} → Tl) u) (var Hd))) u η⇀ p = λ {Γ''} {h} {d} {d'} q → 
+  soundness-v {Γ} {Γ'} {σ ⇀ τ} {e} {e'} .(fn (app (⊢v-rename (λ {σ} → Tl) u) (var Hd))) u η⇀ p = λ q → 
     ≈T-trans 
       (≈-fundamental-lemma (⊢v-rename wk₁ u) (≈e-extend-lem (≈e-monotonicity p) q) q) 
       (≈T-sym (≈T-trans 
-        (⟦⟧v-naturality' {f = h} u (≈e-refl (≈e-sym p)) {h = id-ren} (≈-refl {Γ''} {σ} (≈-sym {Γ''} {σ} q))) 
+        (⟦⟧v-naturality' u (≈e-refl (≈e-sym p)) {h = id-ren} (≈-refl (≈-sym q))) 
         (rename-env-lem-v 
           {f = wk₁} 
-          {e = env-extend (env-rename h e') d'} 
-          {e' = λ x → env-extend (env-rename h e') d' x} 
           u 
-          (≈e-extend-lem (≈e-monotonicity (≈e-refl (≈e-sym p))) (≈-refl {Γ''} {σ} (≈-sym {Γ''} {σ} q))) 
+          (≈e-extend-lem (≈e-monotonicity (≈e-refl (≈e-sym p))) (≈-refl (≈-sym q))) 
           {h = id-ren} 
-          (≈-refl {Γ''} {σ} (≈-sym {Γ''} {σ} q)))))
+          (≈-refl (≈-sym q)))))
   soundness-p .u u ≡-refl q = 
     ≈T-fundamental-lemma u q
   soundness-p {Γ} {Γ'} {σ} t u (≡-sym p) q = 

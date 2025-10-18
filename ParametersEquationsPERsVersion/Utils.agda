@@ -53,7 +53,7 @@ module Utils where
 
   z ∎ = refl
 
-  infix  2 _∎
+  infix  3 _∎
   infixr 2 _≅〈_〉_
 
   -- Congruence for equality
