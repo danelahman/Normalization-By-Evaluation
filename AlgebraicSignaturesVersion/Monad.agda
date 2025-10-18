@@ -11,6 +11,7 @@ open import Syntax
 open import Renamings
 open import Presheaves
 
+open import Data.Nat renaming (_+_ to _+ᴺ_)
 
 module Monad where 
 
@@ -23,7 +24,6 @@ module Monad where
     T-output0 : {Γ : Ctx} → T X Γ → T X Γ
     T-output1 : {Γ : Ctx} → T X Γ → T X Γ
 
-  
   -- Algebra operations
   Alg-input : {X : Ctx → Set} {Γ : Ctx} → T X Γ → T X Γ → T X Γ
   Alg-input d d' = T-input d d'
@@ -129,16 +129,16 @@ module Monad where
   μ {X} {Y} x = * {T-Set^Ren X} {X} id x
 
 
-  -- TODO: please the termination checker
-  {-# TERMINATING #-}
   -- Strength of the residualizing monad
-  t-r : {X Y : Set^Ren} → Set^Ren-Map (X ⊗ (T-Set^Ren Y)) (T-Set^Ren (X ⊗ Y))
-  t-r {Γ} (x , T-return y)  = T-return (x , y)
-  t-r {X} {Y} {Γ} (x , T-to {.Γ} {σ} t y) = T-to t (t-r {X} {Y} {Γ :: σ} ((act X wk₁ x) , y))
-  t-r {X} {Y} {Γ} (x , T-input y z) = T-input (t-r {X} {Y} {Γ} (x , y)) (t-r {X} {Y} {Γ} (x , z))
-  t-r {X} {Y} {Γ} (x , T-output0 y) = T-output0 (t-r {X} {Y} {Γ} (x , y))
-  t-r {X} {Y} {Γ} (x , T-output1 y) = T-output1 (t-r {X} {Y} {Γ} (x , y))
+  t-r' : {X Y : Set^Ren} → {Γ : Ctx} → set X Γ → T (set Y) Γ → T (set (X ⊗ Y)) Γ
+  t-r' {Γ} x (T-return y)  = T-return (x , y)
+  t-r' {X} {Y} {Γ} x (T-to {.Γ} {σ} t y) = T-to t (t-r' {X} {Y} {Γ :: σ} (act X wk₁ x) y)
+  t-r' {X} {Y} {Γ} x (T-input y z) = T-input (t-r' {X} {Y} {Γ} x y) (t-r' {X} {Y} {Γ} x z)
+  t-r' {X} {Y} {Γ} x (T-output0 y) = T-output0 (t-r' {X} {Y} {Γ} x y)
+  t-r' {X} {Y} {Γ} x (T-output1 y) = T-output1 (t-r' {X} {Y} {Γ} x y)
 
+  t-r : {X Y : Set^Ren} → Set^Ren-Map (X ⊗ (T-Set^Ren Y)) (T-Set^Ren (X ⊗ Y))
+  t-r {X} {Y} (x , y) = t-r' {X} {Y} x y
 
   -- Components of Kleisli exponentials
   _⇒_ : (X Y : Ctx → Set) → Ctx → Set 
@@ -374,4 +374,3 @@ module Monad where
       T-output1 
         (t-r (x , * (λ {Γ} z → z) y)) 
     ∎
-
